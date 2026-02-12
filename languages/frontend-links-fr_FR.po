@@ -1,0 +1,570 @@
+# French translation for Frontend Links
+# Copyright (C) 2025 Liwue
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Frontend Links 1.0\n"
+"POT-Creation-Date: 2026-02-12\n"
+"PO-Revision-Date: 2026-02-12 17:22+0100\n"
+"Last-Translator: Liwue <contact@liwue.link>\n"
+"Language-Team: French\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Poedit-KeywordsList: yourls__;yourls_e\n"
+"X-Poedit-Basepath: ..\n"
+"X-Generator: Poedit 3.8\n"
+"X-Poedit-SearchPath-0: plugin.php\n"
+"X-Poedit-SearchPath-1: ajax.php\n"
+"X-Poedit-SearchPath-2: includes/admin-page.php\n"
+"X-Poedit-SearchPath-3: includes/render.php\n"
+"X-Poedit-SearchPath-4: includes/functions.php\n"
+
+#. ─── Admin page: Installation ───────────────────────────────
+#: includes/admin-page.php
+msgid "Installation complete! Tables and default data have been created."
+msgstr "Installation terminée ! Les tables et données par défaut ont été créées."
+
+#: includes/admin-page.php
+msgid "Frontend Links - Installation required"
+msgstr "Frontend Links - Installation requise"
+
+#: includes/admin-page.php
+msgid "The plugin tables have not yet been created in the database."
+msgstr "Les tables du plugin n'ont pas encore été créées dans la base de données."
+
+#: includes/admin-page.php
+msgid "Create the Frontend Links plugin tables?"
+msgstr "Créer les tables du plugin Frontend Links ?"
+
+#: includes/admin-page.php
+msgid "Install plugin"
+msgstr "Installer le plugin"
+
+#. ─── Common labels ──────────────────────────────────────────
+#: includes/admin-page.php includes/render.php
+msgid "Sections"
+msgstr "Sections"
+
+#: includes/admin-page.php
+msgid "Title"
+msgstr "Titre"
+
+#: includes/admin-page.php includes/render.php
+msgid "Links"
+msgstr "Liens"
+
+#: includes/admin-page.php
+msgid "Order"
+msgstr "Ordre"
+
+#: includes/admin-page.php
+msgid "Active"
+msgstr "Actif"
+
+#: includes/admin-page.php
+msgid "Actions"
+msgstr "Actions"
+
+#: includes/admin-page.php
+msgid "Yes"
+msgstr "Oui"
+
+#: includes/admin-page.php
+msgid "No"
+msgstr "Non"
+
+#: includes/admin-page.php
+msgid "Edit"
+msgstr "Modifier"
+
+#: includes/admin-page.php
+msgid "Delete"
+msgstr "Supprimer"
+
+#: includes/admin-page.php
+msgid "No sections."
+msgstr "Aucune section."
+
+#: includes/admin-page.php
+msgid "+ Add a section"
+msgstr "+ Ajouter une section"
+
+#: includes/admin-page.php
+msgid "+ Add a link"
+msgstr "+ Ajouter un lien"
+
+#: includes/admin-page.php
+msgid "No links in this section."
+msgstr "Aucun lien dans cette section."
+
+#: includes/admin-page.php
+msgid "Icon"
+msgstr "Icône"
+
+#: includes/admin-page.php
+msgid "Label"
+msgstr "Libellé"
+
+#: includes/admin-page.php
+msgid "URL"
+msgstr "URL"
+
+#. ─── Profile panel ──────────────────────────────────────────
+#: includes/admin-page.php
+msgid "Profile"
+msgstr "Profil"
+
+#: includes/admin-page.php
+msgid "Name"
+msgstr "Nom"
+
+#: includes/admin-page.php
+msgid "Bio"
+msgstr "Bio"
+
+#: includes/admin-page.php
+msgid "Avatar"
+msgstr "Avatar"
+
+#: includes/admin-page.php
+msgid "Current avatar"
+msgstr "Avatar actuel"
+
+#: includes/admin-page.php
+msgid "current"
+msgstr "actuel"
+
+#: includes/admin-page.php
+msgid "Previous avatar"
+msgstr "Avatar précédent"
+
+#: includes/admin-page.php
+msgid "previous"
+msgstr "précédent"
+
+#: includes/admin-page.php
+msgid "Upload an image:"
+msgstr "Uploader une image :"
+
+#: includes/admin-page.php
+msgid "max 2 MB."
+msgstr "max 2 Mo."
+
+#: includes/admin-page.php
+msgid "Or external URL:"
+msgstr "Ou URL externe :"
+
+#: includes/admin-page.php
+msgid "Delete avatar"
+msgstr "Supprimer l'avatar"
+
+#: includes/admin-page.php
+msgid "Restore previous"
+msgstr "Restaurer le précédent"
+
+#: includes/admin-page.php
+msgid "SEO Title"
+msgstr "Titre SEO"
+
+#: includes/admin-page.php
+msgid "SEO Description"
+msgstr "Description SEO"
+
+#: includes/admin-page.php
+msgid "Save profile"
+msgstr "Enregistrer le profil"
+
+#. ─── Icons panel ────────────────────────────────────────────
+#: includes/admin-page.php
+msgid "Icons"
+msgstr "Icônes"
+
+#: includes/admin-page.php
+msgid "Built-in icons (Font Awesome)"
+msgstr "Icônes intégrées (Font Awesome)"
+
+#: includes/admin-page.php
+msgid "Available by default. Cannot be deleted."
+msgstr "Disponibles par défaut. Non supprimables."
+
+#: includes/admin-page.php
+msgid "Custom icons"
+msgstr "Icônes personnalisées"
+
+#: includes/admin-page.php
+msgid "No custom icons."
+msgstr "Aucune icône personnalisée."
+
+#: includes/admin-page.php
+msgid "Preview"
+msgstr "Aperçu"
+
+#: includes/admin-page.php
+msgid "Type"
+msgstr "Type"
+
+#: includes/admin-page.php
+msgid "Image"
+msgstr "Image"
+
+#: includes/admin-page.php
+msgid "+ Add an icon"
+msgstr "+ Ajouter une icône"
+
+#. ─── Options panel ──────────────────────────────────────────
+#: includes/admin-page.php
+msgid "Options"
+msgstr "Options"
+
+#: includes/admin-page.php
+msgid "Display mode"
+msgstr "Mode d'affichage"
+
+#: includes/admin-page.php
+msgid "Manual"
+msgstr "Manuel"
+
+#: includes/admin-page.php
+msgid "Include <code>fl_render_page()</code> in an external PHP file."
+msgstr "Incluez <code>fl_render_page()</code> dans un fichier PHP externe."
+
+#: includes/admin-page.php
+msgid "Automatic"
+msgstr "Automatique"
+
+#: includes/admin-page.php
+msgid "The plugin serves the page at <code>/</code>."
+msgstr "Le plugin sert la page sur <code>/</code>."
+
+#: includes/admin-page.php
+msgid "Save mode"
+msgstr "Enregistrer le mode"
+
+#: includes/admin-page.php
+msgid "Short links"
+msgstr "Liens courts"
+
+#: includes/admin-page.php
+msgid "When a link is entered without a protocol (e.g.: <code>git</code>), the YOURLS domain is added automatically."
+msgstr "Quand un lien est saisi sans protocole (ex : <code>git</code>), le domaine YOURLS est ajouté automatiquement."
+
+#: includes/admin-page.php
+msgid "Include subdirectory"
+msgstr "Inclure le sous-dossier"
+
+#: includes/admin-page.php
+msgid "Include <code>%s</code> in URLs"
+msgstr "Inclure <code>%s</code> dans les URLs"
+
+#: includes/admin-page.php
+msgid "unchecked"
+msgstr "décoché"
+
+#: includes/admin-page.php
+msgid "checked"
+msgstr "coché"
+
+#: includes/admin-page.php
+msgid "Save"
+msgstr "Enregistrer"
+
+#. ─── Information panel ──────────────────────────────────────
+#: includes/admin-page.php
+msgid "Information"
+msgstr "Informations"
+
+#: includes/admin-page.php
+msgid "YOURLS Site"
+msgstr "Site YOURLS"
+
+#: includes/admin-page.php
+msgid "Detected path"
+msgstr "Chemin détecté"
+
+#: includes/admin-page.php
+msgid "(root)"
+msgstr "(racine)"
+
+#: includes/admin-page.php
+msgid "Uploads folder"
+msgstr "Dossier uploads"
+
+#: includes/admin-page.php
+msgid "Current mode"
+msgstr "Mode actuel"
+
+#: includes/admin-page.php
+msgid "Automatic (/)"
+msgstr "Automatique (/)"
+
+#: includes/admin-page.php
+msgid "Auto index.php file"
+msgstr "Fichier index.php auto"
+
+#. ─── Modals ─────────────────────────────────────────────────
+#: includes/admin-page.php
+msgid "Add a section"
+msgstr "Ajouter une section"
+
+#: includes/admin-page.php
+msgid "Section name"
+msgstr "Nom de la section"
+
+#: includes/admin-page.php
+msgid "Add"
+msgstr "Ajouter"
+
+#: includes/admin-page.php
+msgid "Cancel"
+msgstr "Annuler"
+
+#: includes/admin-page.php
+msgid "Edit section"
+msgstr "Modifier la section"
+
+#: includes/admin-page.php
+msgid "Add a link"
+msgstr "Ajouter un lien"
+
+#: includes/admin-page.php
+msgid "My link"
+msgstr "Mon lien"
+
+#: includes/admin-page.php
+msgid "Without a protocol, the YOURLS domain will be added."
+msgstr "Sans protocole, le domaine YOURLS sera ajouté."
+
+#: includes/admin-page.php
+msgid "Section"
+msgstr "Section"
+
+#: includes/admin-page.php
+msgid "Edit link"
+msgstr "Modifier le lien"
+
+#: includes/admin-page.php
+msgid "Add a custom icon"
+msgstr "Ajouter une icône personnalisée"
+
+#: includes/admin-page.php
+msgid "Lowercase letters, numbers, _ and -. This name will be used to select the icon."
+msgstr "Minuscules, chiffres, _ et -. Ce nom sera utilisé pour sélectionner l'icône."
+
+#: includes/admin-page.php
+msgid "SVG code"
+msgstr "Code SVG"
+
+#: includes/admin-page.php
+msgid "Use %s for theme adaptation."
+msgstr "Utilisez %s pour l'adaptation au thème."
+
+#: includes/admin-page.php
+msgid "Image file"
+msgstr "Fichier image"
+
+#: includes/admin-page.php
+msgid "max 1 MB."
+msgstr "max 1 Mo."
+
+#: includes/admin-page.php
+msgid "Add icon"
+msgstr "Ajouter l'icône"
+
+#. ─── JavaScript strings ────────────────────────────────────
+#: includes/admin-page.php
+msgid "Delete this link?"
+msgstr "Supprimer ce lien ?"
+
+#: includes/admin-page.php
+msgid "Delete this section and all its links?"
+msgstr "Supprimer cette section et tous ses liens ?"
+
+#: includes/admin-page.php
+msgid "Delete this icon?"
+msgstr "Supprimer cette icône ?"
+
+#: includes/admin-page.php
+msgid "Delete the current avatar?"
+msgstr "Supprimer l'avatar actuel ?"
+
+#: includes/admin-page.php
+msgid "Restore the previous avatar?"
+msgstr "Restaurer l'avatar précédent ?"
+
+#: includes/admin-page.php
+msgid "Connection error."
+msgstr "Erreur de connexion."
+
+#. ─── AJAX responses ────────────────────────────────────────
+#: ajax.php
+msgid "Unauthorized. Please log in again."
+msgstr "Non autorisé. Reconnectez-vous."
+
+#: ajax.php
+msgid "Session expired. Please reload the page."
+msgstr "Session expirée. Rechargez la page."
+
+#: ajax.php
+msgid "Invalid request."
+msgstr "Requête invalide."
+
+#: ajax.php
+msgid "Unknown action."
+msgstr "Action inconnue."
+
+#: ajax.php
+msgid "Link added."
+msgstr "Lien ajouté."
+
+#: ajax.php
+msgid "Error adding item."
+msgstr "Erreur lors de l'ajout."
+
+#: ajax.php
+msgid "Link updated."
+msgstr "Lien modifié."
+
+#: ajax.php
+msgid "Error updating item."
+msgstr "Erreur lors de la modification."
+
+#: ajax.php
+msgid "Link deleted."
+msgstr "Lien supprimé."
+
+#: ajax.php
+msgid "Error deleting item."
+msgstr "Erreur lors de la suppression."
+
+#: ajax.php
+msgid "Section added."
+msgstr "Section ajoutée."
+
+#: ajax.php
+msgid "Section updated."
+msgstr "Section modifiée."
+
+#: ajax.php
+msgid "Section deleted."
+msgstr "Section supprimée."
+
+#: ajax.php
+msgid "Icon deleted."
+msgstr "Icône supprimée."
+
+#: ajax.php
+msgid "Automatic mode enabled."
+msgstr "Mode automatique activé."
+
+#: ajax.php
+msgid "Manual mode enabled."
+msgstr "Mode manuel activé."
+
+#: ajax.php
+msgid "Option updated."
+msgstr "Option mise à jour."
+
+#: ajax.php
+msgid "Upload error. Formats: JPG, PNG, GIF, WebP, SVG. Max 2 MB."
+msgstr "Erreur d'upload. Formats : JPG, PNG, GIF, WebP, SVG. Max 2 Mo."
+
+#: ajax.php
+msgid "Profile updated."
+msgstr "Profil mis à jour."
+
+#: ajax.php
+msgid "Avatar deleted."
+msgstr "Avatar supprimé."
+
+#: ajax.php
+msgid "Previous avatar restored."
+msgstr "Avatar précédent restauré."
+
+#: ajax.php
+msgid "No previous avatar."
+msgstr "Aucun avatar précédent."
+
+#: ajax.php
+msgid "Name required (lowercase letters, numbers, _ and -)."
+msgstr "Nom obligatoire (minuscules, chiffres, _ et -)."
+
+#: ajax.php
+msgid "Invalid or empty SVG code."
+msgstr "Code SVG invalide ou vide."
+
+#: ajax.php
+msgid "No file selected."
+msgstr "Aucun fichier sélectionné."
+
+#: ajax.php
+msgid "Upload error. Formats: JPG, PNG, GIF, WebP, SVG. Max 1 MB."
+msgstr "Erreur d'upload. Formats : JPG, PNG, GIF, WebP, SVG. Max 1 Mo."
+
+#: ajax.php
+msgid "Icon \"%s\" added."
+msgstr "Icône « %s » ajoutée."
+
+#: ajax.php
+msgid "Error: name already in use?"
+msgstr "Erreur : nom déjà utilisé ?"
+
+#. ─── Public page (render.php) ──────────────────────────────
+#: includes/render.php
+msgid "Installation required"
+msgstr "Installation requise"
+
+#: includes/render.php
+msgid "The Frontend Links plugin is not yet installed."
+msgstr "Le plugin Frontend Links n'est pas encore installé."
+
+#: includes/render.php
+msgid "Go to admin to install"
+msgstr "Accéder à l'admin pour installer"
+
+#: includes/render.php
+msgid "My Profile"
+msgstr "Mon Profil"
+
+#: includes/render.php
+msgid " - Links"
+msgstr " - Liens"
+
+#: includes/render.php
+msgid "Administration"
+msgstr "Administration"
+
+#: includes/render.php
+msgid "Admin"
+msgstr "Admin"
+
+#. ─── Homepage file management (functions.php) ──────────────
+#: includes/functions.php
+msgid "An index.php file already exists at the root and was not created by this plugin. Delete it manually or use manual mode."
+msgstr "Un fichier index.php existe déjà à la racine et n'a pas été créé par ce plugin. Supprimez-le manuellement ou utilisez le mode manuel."
+
+#: includes/functions.php
+msgid "Unable to write the index.php file. Check folder permissions."
+msgstr "Impossible d'écrire le fichier index.php. Vérifiez les permissions du dossier."
+
+#: includes/functions.php
+msgid "index.php file created: %s"
+msgstr "Fichier index.php créé : %s"
+
+#: includes/functions.php
+msgid "No file to delete."
+msgstr "Aucun fichier à supprimer."
+
+#: includes/functions.php
+msgid "The index.php file has been manually modified. Deletion cancelled for safety."
+msgstr "Le fichier index.php a été modifié manuellement. Suppression annulée par sécurité."
+
+#: includes/functions.php
+msgid "Unable to delete the file. Check permissions."
+msgstr "Impossible de supprimer le fichier. Vérifiez les permissions."
+
+#: includes/functions.php
+msgid "index.php file deleted."
+msgstr "Fichier index.php supprimé."
