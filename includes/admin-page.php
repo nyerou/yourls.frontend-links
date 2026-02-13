@@ -149,15 +149,18 @@ tr.fl-fade-out{opacity:0;transition:opacity .3s}
             <tr><th><?php yourls_e('Icon', 'frontend-links'); ?></th><th><?php yourls_e('Label', 'frontend-links'); ?></th><th><?php yourls_e('URL', 'frontend-links'); ?></th><th><?php yourls_e('Order', 'frontend-links'); ?></th><th><?php yourls_e('Active', 'frontend-links'); ?></th><th><?php yourls_e('Actions', 'frontend-links'); ?></th></tr>
         </thead>
         <tbody>
-            <?php foreach ($sectionLinks as $link): ?>
-            <tr data-id="<?= $link['id'] ?>" data-link='<?= fl_escape(json_encode($link)) ?>'>
+            <?php foreach ($sectionLinks as $link):
+                $linkDisplay = $link;
+                $linkDisplay['url'] = fl_strip_base_path($link['url']);
+            ?>
+            <tr data-id="<?= $link['id'] ?>" data-link='<?= fl_escape(json_encode($linkDisplay)) ?>'>
                 <td style="text-align:center;"><?= fl_get_icon($link['icon'], 16) ?></td>
-                <td><strong class="fl-link-label"><?= fl_escape($link['label']) ?></strong></td>
-                <td class="fl-link-url"><a href="<?= fl_escape(fl_strip_base_path($link['url'])) ?>" target="_blank" style="font-size:12px;"><?= fl_escape(fl_strip_base_path($link['url'])) ?></a></td>
+                <td><strong class="fl-link-label"><?= fl_escape($linkDisplay['label']) ?></strong></td>
+                <td class="fl-link-url"><a href="<?= fl_escape($linkDisplay['url']) ?>" target="_blank" style="font-size:12px;"><?= fl_escape($linkDisplay['url']) ?></a></td>
                 <td class="fl-link-order"><?= $link['sort_order'] ?></td>
                 <td class="fl-link-active"><?= $link['is_active'] ? yourls__('Yes', 'frontend-links') : '<em>' . yourls__('No', 'frontend-links') . '</em>' ?></td>
                 <td class="fl-actions">
-                    <a href="#" onclick='flEditLink(<?= json_encode($link) ?>); return false;'><?php yourls_e('Edit', 'frontend-links'); ?></a>
+                    <a href="#" onclick='flEditLink(<?= json_encode($linkDisplay) ?>); return false;'><?php yourls_e('Edit', 'frontend-links'); ?></a>
                     &nbsp;|&nbsp;
                     <a href="#" onclick="flDeleteLink(<?= $link['id'] ?>, <?= $link['section_id'] ?>); return false;" style="color:#a00;"><?php yourls_e('Delete', 'frontend-links'); ?></a>
                 </td>

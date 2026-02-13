@@ -360,6 +360,66 @@ function fl_normalize_url(string $url): string {
     return $baseUrl . '/' . ltrim($url, '/');
 }
 
+// ─── Short URL Resolution ───────────────────────────────────
+
+/**
+ * Serve a short URL request (called from generated index.php).
+ * - If keyword not found → 404
+ * - Otherwise → delegate to mini redirect page
+ */
+function fl_serve_short_url(string $request): void {
+    $keyword = yourls_sanitize_keyword($request);
+    $url = yourls_get_keyword_longurl($keyword);
+
+    if (!$url) {
+        yourls_do_action('loader_failed', array($request));
+        header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+        echo '404 Not Found';
+        exit;
+    }
+
+    // Log the click
+    if (function_exists('yourls_log_redirect')) {
+        yourls_log_redirect($keyword);
+    }
+
+    fl_serve_redirect_page($keyword, $url);
+    exit;
+}
+
+/**
+ * Render the branded mini redirect page with OG metadata.
+ * Called either from fl_serve_short_url() or from the
+ * redirect_shorturl hook in plugin.php.
+ *
+ * Template: includes/redirect-page.php (edit that file to customize)
+ */
+function fl_serve_redirect_page(string $keyword, string $url): void {
+    // Get title from YOURLS DB
+    $db = yourls_get_db();
+    $table = YOURLS_DB_TABLE_URL;
+    $stmt = $db->prepare("SELECT title FROM `$table` WHERE keyword = ? LIMIT 1");
+    $stmt->execute([$keyword]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $linkTitle = !empty($row['title']) ? $row['title'] : $keyword;
+
+    // Template variables
+    $shortUrl    = fl_get_root_url() . '/' . $keyword;
+    $settings    = fl_tables_exist() ? fl_get_settings() : [];
+    $authorName  = $settings['profile_name'] ?? parse_url(YOURLS_SITE, PHP_URL_HOST);
+    $siteImage   = $settings['profile_avatar'] ?? '';
+    $ogTitle     = $authorName . ' → ' . $linkTitle;
+    $e           = 'fl_escape';
+
+    // Clean URLs for display (strip protocol, query string, trailing slash)
+    $cleanShort  = preg_replace('#^https?://#', '', rtrim($shortUrl, '/'));
+    $cleanDest   = preg_replace('#^https?://#', '', preg_replace('/[?#].*$/', '', rtrim($url, '/')));
+
+    header('Content-Type: text/html; charset=UTF-8');
+    require FL_PLUGIN_DIR . '/includes/redirect-page.php';
+    exit;
+}
+
 // ─── Homepage File Management ───────────────────────────────
 
 /**
@@ -404,21 +464,7 @@ function fl_create_homepage_file(): array {
         . "if (\$request === '') {\n"
         . "    fl_render_page();\n"
         . "} else {\n"
-        . "    // Resolve YOURLS short URL\n"
-        . "    \$keyword = yourls_sanitize_keyword(\$request);\n"
-        . "    \$url = yourls_get_keyword_longurl(\$keyword);\n"
-        . "    if (\$url) {\n"
-        . "        if (function_exists('yourls_log_redirect')) {\n"
-        . "            yourls_log_redirect(\$keyword);\n"
-        . "        }\n"
-        . "        yourls_redirect(\$url, 301);\n"
-        . "        exit;\n"
-        . "    }\n"
-        . "    // Keyword not found\n"
-        . "    yourls_do_action('loader_failed', array(\$request));\n"
-        . "    header(\$_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');\n"
-        . "    echo '404 Not Found';\n"
-        . "    exit;\n"
+        . "    fl_serve_short_url(\$request);\n"
         . "}\n";
 
     // Check if an index.php already exists and is not ours

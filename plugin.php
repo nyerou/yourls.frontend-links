@@ -78,6 +78,37 @@ function fl_serve_homepage($args) {
     }
 }
 
+// ─── Intercept short URL redirects → mini redirect page ─────
+// Uses the redirect_shorturl action which fires ONLY for short URL
+// redirects (not admin redirects). Serves a branded HTML page with
+// OG metadata before redirecting.
+if (yourls_get_option('fl_display_mode') === 'auto') {
+    yourls_add_action('redirect_shorturl', 'fl_intercept_shorturl_redirect');
+}
+
+function fl_intercept_shorturl_redirect($args) {
+    $url = $args[0] ?? '';
+    $keyword = $args[1] ?? '';
+    if (empty($url) || empty($keyword)) return;
+
+    // Don't intercept admin context
+    if (defined('YOURLS_ADMIN')) return;
+
+    fl_serve_redirect_page($keyword, $url);
+    exit;
+}
+
+// ─── Rewrite short URLs in the entire YOURLS admin ──────────
+// Strips the subdirectory from short URLs displayed everywhere
+// (main admin table, API responses, "Your short URL" box, etc.)
+yourls_add_filter('shorturl', 'fl_filter_shorturl');
+function fl_filter_shorturl($shorturl) {
+    return fl_strip_base_path($shorturl);
+}
+
+// Also filter the base YOURLS link generation
+yourls_add_filter('yourls_link', 'fl_filter_shorturl');
+
 // ─── Display admin page ────────────────────────────────────
 function fl_admin_page() {
     require_once FL_PLUGIN_DIR . '/includes/admin-page.php';
