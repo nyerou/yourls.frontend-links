@@ -1,11 +1,11 @@
 <?php
 /*
 Plugin Name: Frontend Links
-Plugin URI: https://github.com/liwue/yourls.frontend-links
+Plugin URI: https://github.com/nyerou/yourls.frontend-links
 Description: Customizable link page with section, link, and profile management from the YOURLS admin.
-Version: 1.0
-Author: Liwue
-Author URI: https://liwue.link
+Version: 1.1
+Author: Nyerou
+Author URI: https://nyerou.link
 */
 
 // No direct access
@@ -56,6 +56,11 @@ function fl_on_activate() {
     }
     if (!is_dir(FL_ICONS_DIR)) {
         mkdir(FL_ICONS_DIR, 0755, true);
+    }
+
+    // If auto mode was previously set, recreate the index.php files
+    if (yourls_get_option('fl_display_mode') === 'auto') {
+        fl_create_homepage_file();
     }
 }
 

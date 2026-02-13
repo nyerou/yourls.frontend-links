@@ -153,7 +153,7 @@ tr.fl-fade-out{opacity:0;transition:opacity .3s}
             <tr data-id="<?= $link['id'] ?>" data-link='<?= fl_escape(json_encode($link)) ?>'>
                 <td style="text-align:center;"><?= fl_get_icon($link['icon'], 16) ?></td>
                 <td><strong class="fl-link-label"><?= fl_escape($link['label']) ?></strong></td>
-                <td class="fl-link-url"><a href="<?= fl_escape($link['url']) ?>" target="_blank" style="font-size:12px;"><?= fl_escape($link['url']) ?></a></td>
+                <td class="fl-link-url"><a href="<?= fl_escape(fl_strip_base_path($link['url'])) ?>" target="_blank" style="font-size:12px;"><?= fl_escape(fl_strip_base_path($link['url'])) ?></a></td>
                 <td class="fl-link-order"><?= $link['sort_order'] ?></td>
                 <td class="fl-link-active"><?= $link['is_active'] ? yourls__('Yes', 'frontend-links') : '<em>' . yourls__('No', 'frontend-links') . '</em>' ?></td>
                 <td class="fl-actions">
@@ -647,7 +647,12 @@ function flSubmitAddLink(form) {
         if (!resp.success) return;
         var link = resp.data;
         var sectionDiv = document.getElementById('fl-link-section-' + link.section_id);
-        if (!sectionDiv) return;
+        if (!sectionDiv) {
+            // Section div missing from DOM (e.g. added in same session), reload
+            flCloseModals();
+            location.reload();
+            return;
+        }
 
         var empty = sectionDiv.querySelector('.fl-empty-msg');
         if (empty) {
@@ -818,16 +823,25 @@ function flSubmitAddSection(form) {
             sel.appendChild(opt);
         });
 
-        var linksArea = document.querySelector('h2 + p + div.fl-link-section, .fl-link-section');
-        var container = linksArea ? linksArea.parentNode : document.body;
-        var lastSection = container.querySelector('.fl-link-section:last-of-type');
         var newDiv = document.createElement('div');
         newDiv.id = 'fl-link-section-' + s.id;
         newDiv.className = 'fl-link-section';
         newDiv.dataset.sectionId = s.id;
         newDiv.innerHTML = '<h3 class="fl-section-heading">' + flEsc(s.title) + '</h3><p class="fl-empty-msg"><em>' + FL.i18n.noLinksInSection + '</em></p>';
+        var lastSection = document.querySelector('.fl-link-section:last-of-type');
         if (lastSection) {
             lastSection.insertAdjacentElement('afterend', newDiv);
+        } else {
+            // First section: insert after the "Links" heading + add button
+            var linksHeading = document.querySelectorAll('h2')[1];
+            if (linksHeading) {
+                var addBtn = linksHeading.nextElementSibling;
+                if (addBtn) {
+                    addBtn.insertAdjacentElement('afterend', newDiv);
+                } else {
+                    linksHeading.insertAdjacentElement('afterend', newDiv);
+                }
+            }
         }
 
         flCloseModals();

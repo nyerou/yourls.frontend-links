@@ -1,12 +1,12 @@
 # French translation for Frontend Links
-# Copyright (C) 2025 Liwue
+# Copyright (C) 2025 Nyerou
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Frontend Links 1.0\n"
 "POT-Creation-Date: 2026-02-12\n"
 "PO-Revision-Date: 2026-02-12 17:22+0100\n"
-"Last-Translator: Liwue <contact@liwue.link>\n"
+"Last-Translator: Nyerou <contact@nyerou.link>\n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
 "MIME-Version: 1.0\n"

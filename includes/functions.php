@@ -27,6 +27,51 @@ function fl_get_yourls_base_path(): string {
 }
 
 /**
+ * Get the root URL (scheme + host + port) without the YOURLS subdirectory.
+ * E.g.: "https://example.com/yourls" → "https://example.com"
+ * E.g.: "https://example.com:8080/yourls" → "https://example.com:8080"
+ */
+function fl_get_root_url(): string {
+    $parsed = parse_url(YOURLS_SITE);
+    $scheme = $parsed['scheme'] ?? 'https';
+    $host = $parsed['host'] ?? '';
+    $port = isset($parsed['port']) ? ':' . $parsed['port'] : '';
+    return $scheme . '://' . $host . $port;
+}
+
+/**
+ * Strip the YOURLS subdirectory from a URL if present.
+ * Only modifies URLs on the same host as YOURLS_SITE.
+ * E.g.: "https://example.com/yourls/git" → "https://example.com/git"
+ * External URLs are returned unchanged.
+ */
+function fl_strip_base_path(string $url): string {
+    $basePath = fl_get_yourls_base_path();
+    if ($basePath === '') return $url;
+
+    $parsedSite = parse_url(YOURLS_SITE);
+    $parsed = parse_url($url);
+
+    // Only strip if same host
+    if (($parsed['host'] ?? '') !== ($parsedSite['host'] ?? '')) return $url;
+
+    // Strip the base path if present
+    $path = $parsed['path'] ?? '';
+    if ($path === $basePath || str_starts_with($path, $basePath . '/')) {
+        $newPath = substr($path, strlen($basePath));
+        if ($newPath === '') $newPath = '/';
+        $result = ($parsed['scheme'] ?? 'https') . '://' . $parsed['host'];
+        if (isset($parsed['port'])) $result .= ':' . $parsed['port'];
+        $result .= $newPath;
+        if (isset($parsed['query'])) $result .= '?' . $parsed['query'];
+        if (isset($parsed['fragment'])) $result .= '#' . $parsed['fragment'];
+        return $result;
+    }
+
+    return $url;
+}
+
+/**
  * Check if the plugin tables exist in the database
  */
 function fl_tables_exist(): bool {
@@ -321,34 +366,60 @@ function fl_normalize_url(string $url): string {
  * Create an index.php file at the document root
  * to serve the links page in automatic mode.
  * The file contains a marker so it can be properly removed.
+ *
+ * Also creates a security index.php inside the YOURLS subdirectory
+ * (if any) to redirect to admin.
  */
 function fl_create_homepage_file(): array {
-    // Determine the path of the file to create
     $yourlsBasePath = fl_get_yourls_base_path();
+
     if ($yourlsBasePath !== '') {
-        // YOURLS is in a subdirectory: create index.php above
-        $docRoot = dirname(YOURLS_ABSPATH);
+        // YOURLS is in a subdirectory: create index.php at the document root
+        $segments = array_filter(explode('/', trim($yourlsBasePath, '/')));
+        $docRoot = YOURLS_ABSPATH;
+        for ($i = 0, $n = count($segments); $i < $n; $i++) {
+            $docRoot = dirname($docRoot);
+        }
     } else {
-        // YOURLS is at the root: use DOCUMENT_ROOT
-        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? YOURLS_ABSPATH;
+        // YOURLS is at the root: create index.php in YOURLS directory
+        $docRoot = YOURLS_ABSPATH;
     }
 
     $filePath = rtrim($docRoot, '/\\') . '/index.php';
 
-    // Calculate relative path to load-yourls.php
-    if ($yourlsBasePath !== '') {
-        $loadPath = '.' . $yourlsBasePath . '/includes/load-yourls.php';
-    } else {
-        $loadPath = './includes/load-yourls.php';
-    }
+    // Use absolute path to load-yourls.php (no relative ./ ambiguity)
+    $yourlsLoadPath = rtrim(YOURLS_ABSPATH, '/\\') . '/includes/load-yourls.php';
+    // Normalize to forward slashes for cross-platform compatibility
+    $yourlsLoadPath = str_replace('\\', '/', $yourlsLoadPath);
 
     $marker = '/* FRONTEND_LINKS_AUTO_GENERATED */';
     $content = "<?php\n"
         . "$marker\n"
         . "// Auto-generated file by the Frontend Links plugin.\n"
         . "// Do not modify - it will be deleted if you switch to manual mode.\n"
-        . "require_once __DIR__ . '/$loadPath';\n"
-        . "fl_render_page();\n";
+        . "require_once '$yourlsLoadPath';\n"
+        . "\n"
+        . "\$request = trim(parse_url(\$_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');\n"
+        . "\n"
+        . "if (\$request === '') {\n"
+        . "    fl_render_page();\n"
+        . "} else {\n"
+        . "    // Resolve YOURLS short URL\n"
+        . "    \$keyword = yourls_sanitize_keyword(\$request);\n"
+        . "    \$url = yourls_get_keyword_longurl(\$keyword);\n"
+        . "    if (\$url) {\n"
+        . "        if (function_exists('yourls_log_redirect')) {\n"
+        . "            yourls_log_redirect(\$keyword);\n"
+        . "        }\n"
+        . "        yourls_redirect(\$url, 301);\n"
+        . "        exit;\n"
+        . "    }\n"
+        . "    // Keyword not found\n"
+        . "    yourls_do_action('loader_failed', array(\$request));\n"
+        . "    header(\$_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');\n"
+        . "    echo '404 Not Found';\n"
+        . "    exit;\n"
+        . "}\n";
 
     // Check if an index.php already exists and is not ours
     if (file_exists($filePath)) {
@@ -371,43 +442,179 @@ function fl_create_homepage_file(): array {
     // Store the path for later cleanup
     yourls_update_option('fl_homepage_file_path', $filePath);
 
+    // Create security redirect in YOURLS subdirectory (only if there is one)
+    if ($yourlsBasePath !== '') {
+        fl_create_yourls_root_index();
+    }
+
+    // Create .htaccess at the document root for short URL rewriting
+    $htaccessResult = fl_create_root_htaccess($docRoot, $yourlsBasePath);
+
+    $msg = sprintf(yourls__('index.php file created: %s', 'frontend-links'), $filePath);
+    if (!$htaccessResult['success']) {
+        $msg .= ' ' . $htaccessResult['message'];
+    }
+
     return [
         'success' => true,
-        'message' => sprintf(yourls__('index.php file created: %s', 'frontend-links'), $filePath)
+        'message' => $msg
     ];
 }
 
 /**
- * Delete the index.php file created by fl_create_homepage_file()
- * Only deletes if the file contains the plugin marker.
+ * Create or update .htaccess at the document root to rewrite short URLs
+ * to the YOURLS loader. This allows /keyword to resolve correctly even
+ * when YOURLS is installed in a subdirectory.
+ *
+ * The rules:
+ *  - Existing files/directories are served as-is
+ *  - "/" is served by index.php (frontend page)
+ *  - Everything else is forwarded to YOURLS yourls-loader.php
+ */
+function fl_create_root_htaccess(string $docRoot, string $yourlsBasePath): array {
+    $htaccessPath = rtrim($docRoot, '/\\') . '/.htaccess';
+    $marker = '# BEGIN Frontend Links';
+    $markerEnd = '# END Frontend Links';
+
+    $rules = "$marker\n"
+        . "<IfModule mod_rewrite.c>\n"
+        . "RewriteEngine On\n"
+        . "RewriteBase /\n"
+        . "RewriteCond %{REQUEST_FILENAME} -f [OR]\n"
+        . "RewriteCond %{REQUEST_FILENAME} -d\n"
+        . "RewriteRule ^ - [L]\n"
+        . "RewriteRule ^(.*)$ index.php [L]\n"
+        . "</IfModule>\n"
+        . "$markerEnd\n";
+
+    // If .htaccess exists, replace our block or append
+    if (file_exists($htaccessPath)) {
+        $existing = file_get_contents($htaccessPath);
+
+        if (strpos($existing, $marker) !== false) {
+            // Replace existing block
+            $pattern = '/' . preg_quote($marker, '/') . '.*?' . preg_quote($markerEnd, '/') . '\n?/s';
+            $content = preg_replace($pattern, $rules, $existing);
+        } else {
+            // Append our block
+            $content = rtrim($existing) . "\n\n" . $rules;
+        }
+    } else {
+        $content = $rules;
+    }
+
+    if (file_put_contents($htaccessPath, $content) === false) {
+        return [
+            'success' => false,
+            'message' => yourls__('Unable to write the .htaccess file. Short URLs at the root may not work.', 'frontend-links')
+        ];
+    }
+
+    yourls_update_option('fl_htaccess_file_path', $htaccessPath);
+
+    return ['success' => true, 'message' => ''];
+}
+
+/**
+ * Create a security index.php inside the YOURLS subdirectory
+ * that redirects to admin. Prevents directory listing and
+ * secures the YOURLS root when the frontend page is at /.
+ * Only creates the file if none exists or if it was created by us.
+ */
+function fl_create_yourls_root_index(): void {
+    $filePath = rtrim(YOURLS_ABSPATH, '/\\') . '/index.php';
+    $marker = '/* FRONTEND_LINKS_YOURLS_REDIRECT */';
+
+    // Don't overwrite existing files not created by us
+    if (file_exists($filePath)) {
+        $existing = file_get_contents($filePath);
+        if (strpos($existing, $marker) === false) {
+            return;
+        }
+    }
+
+    $content = "<?php\n"
+        . "$marker\n"
+        . "header('Location: admin/');\n"
+        . "exit;\n";
+
+    if (file_put_contents($filePath, $content) !== false) {
+        yourls_update_option('fl_yourls_root_index_path', $filePath);
+    }
+}
+
+/**
+ * Delete the index.php files created by fl_create_homepage_file()
+ * Only deletes if the files contain the plugin markers.
  */
 function fl_delete_homepage_file(): array {
+    // Delete the document root index.php
     $filePath = yourls_get_option('fl_homepage_file_path', '');
 
-    if (empty($filePath) || !file_exists($filePath)) {
-        return ['success' => true, 'message' => yourls__('No file to delete.', 'frontend-links')];
-    }
+    if (!empty($filePath) && file_exists($filePath)) {
+        $content = file_get_contents($filePath);
+        $marker = '/* FRONTEND_LINKS_AUTO_GENERATED */';
 
-    $content = file_get_contents($filePath);
-    $marker = '/* FRONTEND_LINKS_AUTO_GENERATED */';
+        if (strpos($content, $marker) === false) {
+            return [
+                'success' => false,
+                'message' => yourls__('The index.php file has been manually modified. Deletion cancelled for safety.', 'frontend-links')
+            ];
+        }
 
-    if (strpos($content, $marker) === false) {
-        return [
-            'success' => false,
-            'message' => yourls__('The index.php file has been manually modified. Deletion cancelled for safety.', 'frontend-links')
-        ];
-    }
-
-    if (!unlink($filePath)) {
-        return [
-            'success' => false,
-            'message' => yourls__('Unable to delete the file. Check permissions.', 'frontend-links')
-        ];
+        if (!unlink($filePath)) {
+            return [
+                'success' => false,
+                'message' => yourls__('Unable to delete the file. Check permissions.', 'frontend-links')
+            ];
+        }
     }
 
     yourls_update_option('fl_homepage_file_path', '');
 
+    // Delete the YOURLS subdirectory security index.php
+    $yourlsIndexPath = yourls_get_option('fl_yourls_root_index_path', '');
+    if (!empty($yourlsIndexPath) && file_exists($yourlsIndexPath)) {
+        $existing = file_get_contents($yourlsIndexPath);
+        if (strpos($existing, '/* FRONTEND_LINKS_YOURLS_REDIRECT */') !== false) {
+            unlink($yourlsIndexPath);
+        }
+    }
+    yourls_update_option('fl_yourls_root_index_path', '');
+
+    // Remove .htaccess rules
+    fl_delete_root_htaccess();
+
     return ['success' => true, 'message' => yourls__('index.php file deleted.', 'frontend-links')];
+}
+
+/**
+ * Remove the Frontend Links rewrite block from the root .htaccess.
+ * If the file only contains our block, delete it entirely.
+ */
+function fl_delete_root_htaccess(): void {
+    $htaccessPath = yourls_get_option('fl_htaccess_file_path', '');
+    if (empty($htaccessPath) || !file_exists($htaccessPath)) return;
+
+    $content = file_get_contents($htaccessPath);
+    $marker = '# BEGIN Frontend Links';
+    $markerEnd = '# END Frontend Links';
+
+    if (strpos($content, $marker) === false) return;
+
+    // Remove our block
+    $pattern = '/' . preg_quote($marker, '/') . '.*?' . preg_quote($markerEnd, '/') . '\n?/s';
+    $cleaned = preg_replace($pattern, '', $content);
+    $cleaned = trim($cleaned);
+
+    if ($cleaned === '') {
+        // File only contained our rules, delete it
+        unlink($htaccessPath);
+    } else {
+        file_put_contents($htaccessPath, $cleaned . "\n");
+    }
+
+    yourls_update_option('fl_htaccess_file_path', '');
 }
 
 // ─── Settings ───────────────────────────────────────────────

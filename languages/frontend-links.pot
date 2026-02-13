@@ -1,5 +1,5 @@
 # Frontend Links - Translation Template
-# Copyright (C) 2025 Liwue
+# Copyright (C) 2025 Nyerou
 # This file is distributed under the same license as the Frontend Links plugin.
 #
 #, fuzzy

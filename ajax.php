@@ -46,6 +46,7 @@ switch ($action) {
         if ($id) {
             $link = fl_get_link($id);
             $link['icon_html'] = fl_get_icon($link['icon'], 16);
+            $link['url'] = fl_strip_base_path($link['url']);
             $resp = ['success' => true, 'message' => yourls__('Link added.', 'frontend-links'), 'data' => $link];
         } else {
             $resp['message'] = yourls__('Error adding item.', 'frontend-links');
@@ -64,6 +65,7 @@ switch ($action) {
         if ($ok) {
             $link = fl_get_link((int)$_POST['link_id']);
             $link['icon_html'] = fl_get_icon($link['icon'], 16);
+            $link['url'] = fl_strip_base_path($link['url']);
             $resp = ['success' => true, 'message' => yourls__('Link updated.', 'frontend-links'), 'data' => $link];
         } else {
             $resp['message'] = yourls__('Error updating item.', 'frontend-links');

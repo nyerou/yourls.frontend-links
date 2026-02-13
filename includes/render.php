@@ -43,8 +43,8 @@ function fl_render_page(): void {
     $metaTitle = $settings['meta_title'] ?? $profileName . yourls__(' - Links', 'frontend-links');
     $metaDescription = $settings['meta_description'] ?? $profileBio;
 
-    // Site URL
-    $siteUrl = YOURLS_SITE;
+    // Site URL (root domain without YOURLS subdirectory)
+    $siteUrl = fl_get_root_url();
 
     // Plugin assets URL (CSS/JS/images)
     $assetsUrl = yourls_plugin_url(FL_PLUGIN_DIR) . '/assets';
@@ -148,7 +148,7 @@ function fl_render_page(): void {
                             $delay = $globalIndex * 60;
                             $globalIndex++;
                         ?>
-                        <a href="<?= $e($link['url']) ?>"
+                        <a href="<?= $e(fl_strip_base_path($link['url'])) ?>"
                            target="_blank"
                            rel="noopener noreferrer"
                            class="link-item group flex items-center gap-3.5 px-5 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-foreground opacity-0"
