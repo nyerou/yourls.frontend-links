@@ -21,22 +21,32 @@ Link-in-bio page plugin for YOURLS — manage sections, links, profile and custo
 - **Security**: SVG sanitization (XSS prevention), SSRF protection on URL fetching, uploads directory lockdown
 - **i18n ready** with French translation included
 
-## Screenshots
+## Demos (Screens or GIFs)
 
-### Sections & Links management
-![Sections and links CRUD](screens/links-sections-demo-add_edit_delete.gif)
+<details>
+<summary>Sections & Links management</summary>
+<img src="screens/links-sections-demo-add_edit_delete.gif" width="600" alt="Sections and links CRUD">
+</details>
 
-### Profile & Avatar
-![Profile and avatar management](screens/profile-avatars-demo.gif)
+<details>
+<summary>Profile & Avatar</summary>
+<img src="screens/profile-avatars-demo.gif" width="600" alt="Profile and avatar management">
+</details>
 
-### Custom icons
-![Adding custom icons](screens/add-icons-demo.png)
+<details>
+<summary>Custom icons</summary>
+<img src="screens/add-icons-demo.png" width="600" alt="Adding custom icons">
+</details>
 
-### Settings & Feature toggles
-![Options panel and feature toggles](screens/settings-infos-demo.png)
+<details>
+<summary>Settings & Feature toggles</summary>
+<img src="screens/settings-infos-demo.png" width="600" alt="Options panel and feature toggles">
+</details>
 
-### Social preview (Discord)
-![Discord embed with OG metadata](screens/meta-seo-demo-discord.png)
+<details>
+<summary>Social preview (Discord)</summary>
+<img src="screens/meta-seo-demo-discord.png" width="400" alt="Discord embed with OG metadata">
+</details>
 
 ## Requirements
 
@@ -54,10 +64,10 @@ Link-in-bio page plugin for YOURLS — manage sections, links, profile and custo
 
 ### Display mode
 
-| Mode | Description |
-|------|-------------|
+| Mode          | Description                                                                                                                             |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | **Automatic** | The plugin creates `index.php` and `.htaccess` at the document root. The link page is served at `/` and short URLs resolve at the root. |
-| **Manual** | Include the rendering function in your own PHP file. |
+| **Manual**    | Include the rendering function in your own PHP file.                                                                                    |
 
 Manual mode example:
 
@@ -69,10 +79,10 @@ fl_render_page();
 
 ### Features
 
-| Option | Description |
-|--------|-------------|
+| Option                    | Description                                                                                                                                                                                               |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Branded redirect page** | When enabled (default), short URL clicks show a branded interstitial with metadata fetched from the target page (title, image, description, theme color). When disabled, uses a direct HTTP 302 redirect. |
-| **Branded 404 page** | When enabled (default), unknown URLs show a branded error page. When disabled, returns a basic HTTP 404. |
+| **Branded 404 page**      | When enabled (default), unknown URLs show a branded error page. When disabled, returns a basic HTTP 404.                                                                                                  |
 
 ### Short links
 
@@ -138,6 +148,7 @@ frontend-links/
 ## Changelog
 
 ### 1.2
+
 - Admin page renamed to "Frontend Administration"
 - Redirect page now fetches OG metadata from target URL (image, type, description, theme-color, title)
 - Author in meta tags is now the shortener domain (e.g. `nyerou.link`)
@@ -151,12 +162,14 @@ frontend-links/
 - Comprehensive file header comments on all source files
 
 ### 1.1
+
 - Subdirectory support: short URLs now resolve at the root domain
 - Auto mode generates `.htaccess` with rewrite rules for short URL resolution
 - JSON-LD, canonical, and Open Graph URLs use the root domain (without subdirectory)
 - Link URLs displayed in admin and frontend strip the YOURLS subdirectory
 
 ### 1.0
+
 - Initial release
 
 ## License
