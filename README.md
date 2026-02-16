@@ -1,14 +1,14 @@
 # Frontend Links - YOURLS Plugin
 
-Customizable link page with section, link, and profile management from the YOURLS admin. Designed for **link-in-bio** style pages.
+Link-in-bio page plugin for YOURLS — manage sections, links, profile and custom icons from the admin panel.
 
 ## Features
 
 - **Sections & Links** management with drag-friendly sort order
 - **Profile** customization (name, bio, avatar with upload/restore)
 - **Custom icons** (SVG code or image upload) alongside built-in Font Awesome icons
-- **SEO** meta tags, Open Graph, Twitter Card, and Schema.org (JSON-LD)
-- **Branded redirect page**: mini interstitial with OG metadata before redirecting (can be disabled)
+- **Social previews**: redirect page fetches `og:image`, `og:type`, `og:description`, `theme-color` and `<title>` from the target URL for accurate social link previews (Discord, Slack, Twitter, Facebook)
+- **Branded redirect page**: interstitial with target page metadata before redirecting (can be disabled)
 - **Branded 404 page**: custom error page matching your site design (can be disabled)
 - **Auto mode**: generates `index.php` and `.htaccess` at the document root, no manual setup needed
 - **Manual mode**: include `fl_render_page()` from any PHP file
@@ -18,12 +18,13 @@ Customizable link page with section, link, and profile management from the YOURL
   - Auto-generated `.htaccess` handles URL rewriting
   - JSON-LD and meta tags use the root domain
 - **CSP compliant**: no inline scripts or styles, compatible with YOURLS 1.10+ strict Content Security Policy
+- **Security**: SVG sanitization (XSS prevention), SSRF protection on URL fetching, uploads directory lockdown
 - **i18n ready** with French translation included
 
 ## Requirements
 
 - [YOURLS](https://yourls.org/) 1.9+
-- PHP 8.0+
+- PHP 8.0+ with cURL extension
 - Apache with `mod_rewrite` (for auto mode)
 
 ## Installation
@@ -53,14 +54,14 @@ fl_render_page();
 
 | Option | Description |
 |--------|-------------|
-| **Branded redirect page** | When enabled (default), short URL clicks show a branded interstitial page with OG metadata before redirecting. When disabled, uses a direct HTTP 302 redirect. |
-| **Branded 404 page** | When enabled (default), unknown URLs show a branded error page. When disabled, the server or another plugin handles the 404. |
+| **Branded redirect page** | When enabled (default), short URL clicks show a branded interstitial with metadata fetched from the target page (title, image, description, theme color). When disabled, uses a direct HTTP 302 redirect. |
+| **Branded 404 page** | When enabled (default), unknown URLs show a branded error page. When disabled, returns a basic HTTP 404. |
 
 ### Short links
 
 When a link is entered without a protocol (e.g. `git`), the YOURLS domain is added automatically:
 
-- `git` &rarr; `https://example.com/git`
+- `git` → `https://example.com/git`
 
 An option allows including the YOURLS subdirectory in generated URLs if needed.
 
@@ -72,7 +73,7 @@ An option allows including the YOURLS subdirectory in generated URLs if needed.
 
 ### Custom icons
 
-- **SVG code**: paste inline SVG, use `stroke="currentColor"` for theme adaptation
+- **SVG code**: paste inline SVG, use `stroke="currentColor"` for theme adaptation (automatically sanitized)
 - **Image**: upload JPG, PNG, GIF, WebP, or SVG (max 1 MB)
 
 ## File structure
@@ -102,21 +103,34 @@ frontend-links/
 │       ├── redirect.js     # Redirect delay script
 │       ├── stats-rewrite.js # Stats link subdirectory fix
 │       └── app.js          # Homepage particle system
-├── uploads/                # Avatars & custom icon images
+├── uploads/                # Avatars & custom icon images (gitignored)
+│   ├── .htaccess           # Security: no PHP execution, SVG headers
 │   └── icons/
 └── languages/              # Translation files (.pot, .po)
 ```
+
+## Security
+
+- **SVG sanitization**: all SVG input (code and file uploads) is stripped of `<script>` tags, event handlers, `javascript:` URLs, `<foreignObject>` and external `<use>` references
+- **SSRF protection**: target URL metadata fetching only allows `http`/`https` schemes and blocks private/reserved IP ranges
+- **Uploads lockdown**: `.htaccess` blocks PHP execution, adds `Content-Security-Policy` and `X-Content-Type-Options: nosniff` for SVG files
+- **CSRF protection**: all AJAX requests verified with YOURLS nonces
+- **Authentication**: admin panel and AJAX endpoint require YOURLS authentication
+- **Prepared statements**: all database queries use parameterized queries (PDO)
 
 ## Changelog
 
 ### 1.2
 - Admin page renamed to "Frontend Administration"
+- Redirect page now fetches OG metadata from target URL (image, type, description, theme-color, title)
+- Author in meta tags is now the shortener domain (e.g. `nyerou.link`)
 - All CSS and JS externalized to separate asset files (CSP compliant with YOURLS 1.10+)
 - New templates directory: `home.php`, `admin.php`, `redirect.php`, `404.php`
-- Branded redirect interstitial page with OG metadata for social previews
+- Branded redirect interstitial page with target page metadata for social previews
 - Branded 404 error page with glass-card design
 - Feature toggles to disable branded redirect and/or 404 pages
 - Stats links fixed to include YOURLS subdirectory when stripped by short URL filter
+- Security: SVG sanitization, SSRF protection, uploads directory lockdown
 - Comprehensive file header comments on all source files
 
 ### 1.1
