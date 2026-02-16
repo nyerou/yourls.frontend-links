@@ -1,7 +1,25 @@
 <?php
 /**
- * Frontend Links - CRUD functions + Uploads
- * Uses YOURLS DB connection (Aura.SQL / PDO)
+ * Frontend Links - Core Functions
+ * =================================
+ *
+ * All server-side logic for the plugin:
+ *   - Helpers (escape, URL parsing, base path stripping)
+ *   - Avatar management (upload, rotate, restore, delete)
+ *   - Custom icon CRUD (SVG + image upload)
+ *   - URL normalization (short keyword → full URL)
+ *   - Short URL resolution (keyword lookup → redirect or 404)
+ *   - Redirect & 404 page serving (loads templates with variables)
+ *   - Homepage file management (auto-generated index.php + .htaccess)
+ *   - Settings / Sections / Links CRUD (DB operations)
+ *
+ * Database: Uses YOURLS DB connection (Aura.SQL / PDO).
+ * All tables are prefixed with FL_TABLE_PREFIX ("frontend_").
+ *
+ * @see plugin.php   Entry point that loads this file
+ * @see ajax.php     AJAX endpoint that calls these functions
+ *
+ * @package FrontendLinks
  */
 
 if (!defined('YOURLS_ABSPATH')) die();
@@ -364,17 +382,25 @@ function fl_normalize_url(string $url): string {
 
 /**
  * Serve a short URL request (called from generated index.php).
- * - If keyword not found → 404
+ * - keyword not found → 404
  * - Otherwise → delegate to mini redirect page
+ *
+ * Note: Stats (keyword+) are only accessible via the YOURLS admin
+ * subdirectory (e.g. /-/keyword+). Requests without the subdirectory
+ * are intentionally NOT redirected to stats for security.
  */
 function fl_serve_short_url(string $request): void {
+    // Stats format (keyword+) → 404 at root level
+    if (str_contains($request, '+')) {
+        fl_serve_404_page($request);
+        exit;
+    }
+
     $keyword = yourls_sanitize_keyword($request);
     $url = yourls_get_keyword_longurl($keyword);
 
     if (!$url) {
-        yourls_do_action('loader_failed', array($request));
-        header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
-        echo '404 Not Found';
+        fl_serve_404_page($request);
         exit;
     }
 
@@ -392,9 +418,15 @@ function fl_serve_short_url(string $request): void {
  * Called either from fl_serve_short_url() or from the
  * redirect_shorturl hook in plugin.php.
  *
- * Template: includes/redirect-page.php (edit that file to customize)
+ * Template: templates/redirect.php (edit that file to customize)
  */
 function fl_serve_redirect_page(string $keyword, string $url): void {
+    // If branded redirect page is disabled, do a direct redirect
+    if (yourls_get_option('fl_disable_redirect_page') === '1') {
+        header('Location: ' . $url, true, 302);
+        exit;
+    }
+
     // Get title from YOURLS DB
     $db = yourls_get_db();
     $table = YOURLS_DB_TABLE_URL;
@@ -415,8 +447,36 @@ function fl_serve_redirect_page(string $keyword, string $url): void {
     $cleanShort  = preg_replace('#^https?://#', '', rtrim($shortUrl, '/'));
     $cleanDest   = preg_replace('#^https?://#', '', preg_replace('/[?#].*$/', '', rtrim($url, '/')));
 
+    // Assets URL for external CSS/JS references
+    $assetsUrl   = yourls_plugin_url(FL_PLUGIN_DIR) . '/assets';
+
     header('Content-Type: text/html; charset=UTF-8');
-    require FL_PLUGIN_DIR . '/includes/redirect-page.php';
+    require FL_PLUGIN_DIR . '/templates/redirect.php';
+    exit;
+}
+
+/**
+ * Render a branded 404 page.
+ * Template: templates/404.php (edit that file to customize)
+ */
+function fl_serve_404_page(string $request): void {
+    // If branded 404 page is disabled, send a basic 404 and stop
+    if (yourls_get_option('fl_disable_404_page') === '1') {
+        header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+        exit;
+    }
+
+    $homeUrl    = fl_get_root_url() . '/';
+    $settings   = fl_tables_exist() ? fl_get_settings() : [];
+    $authorName = $settings['profile_name'] ?? parse_url(YOURLS_SITE, PHP_URL_HOST);
+    $e          = 'fl_escape';
+
+    // Assets URL for external CSS/JS references
+    $assetsUrl  = yourls_plugin_url(FL_PLUGIN_DIR) . '/assets';
+
+    header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+    header('Content-Type: text/html; charset=UTF-8');
+    require FL_PLUGIN_DIR . '/templates/404.php';
     exit;
 }
 
@@ -508,27 +568,40 @@ function fl_create_homepage_file(): array {
 }
 
 /**
- * Create or update .htaccess at the document root to rewrite short URLs
- * to the YOURLS loader. This allows /keyword to resolve correctly even
- * when YOURLS is installed in a subdirectory.
+ * Create or update .htaccess at the document root to rewrite short URLs.
  *
- * The rules:
- *  - Existing files/directories are served as-is
- *  - "/" is served by index.php (frontend page)
- *  - Everything else is forwarded to YOURLS yourls-loader.php
+ * Rules generated (in order):
+ *  1. YOURLS subdirectory passthrough (if subdirectory exists)
+ *     /{subdir}/* → let YOURLS handle it (admin, loader, stats, etc.)
+ *  2. Existing files/directories → serve as-is
+ *  3. Everything else → index.php (Frontend Links handler)
  */
 function fl_create_root_htaccess(string $docRoot, string $yourlsBasePath): array {
     $htaccessPath = rtrim($docRoot, '/\\') . '/.htaccess';
     $marker = '# BEGIN Frontend Links';
     $markerEnd = '# END Frontend Links';
 
+    // Build the rules
     $rules = "$marker\n"
         . "<IfModule mod_rewrite.c>\n"
         . "RewriteEngine On\n"
-        . "RewriteBase /\n"
+        . "RewriteBase /\n";
+
+    // If YOURLS is in a subdirectory, add stats routing + passthrough
+    if ($yourlsBasePath !== '') {
+        // Trim leading slash for .htaccess pattern matching
+        $pathForRegex = ltrim($yourlsBasePath, '/');
+
+        // Let YOURLS handle its own subdirectory (admin, loader, stats, etc.)
+        $rules .= "# Let YOURLS handle its subdirectory\n"
+            . "RewriteRule ^" . $pathForRegex . "/ - [L]\n";
+    }
+
+    $rules .= "# Existing files/directories pass through\n"
         . "RewriteCond %{REQUEST_FILENAME} -f [OR]\n"
         . "RewriteCond %{REQUEST_FILENAME} -d\n"
         . "RewriteRule ^ - [L]\n"
+        . "# Everything else -> Frontend Links handler\n"
         . "RewriteRule ^(.*)$ index.php [L]\n"
         . "</IfModule>\n"
         . "$markerEnd\n";

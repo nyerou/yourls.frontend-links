@@ -1,6 +1,31 @@
 /**
- * Link Page Studio - JavaScript
- * Particle system and animations
+ * Frontend Links - Homepage JavaScript
+ * ======================================
+ *
+ * Interactive particle system for the homepage background.
+ * Creates floating dots that react to mouse/touch movement
+ * with a repulsion effect.
+ *
+ * Features:
+ *   - 35 particles with random size, position, and color (purple hues)
+ *   - CSS float animation for idle movement
+ *   - Mouse/touch repulsion within a configurable radius
+ *   - Scale + opacity boost on nearby particles
+ *   - Automatic cleanup via destroy() method
+ *
+ * Configuration (constants):
+ *   REPEL_RADIUS   — Mouse influence radius in pixels (default: 120)
+ *   REPEL_STRENGTH — Push force multiplier (default: 60)
+ *
+ * Requirements:
+ *   - A #particles container element in the page
+ *   - The .particle CSS class (defined in assets/css/my.css)
+ *   - The @keyframes float animation (defined in assets/css/my.css)
+ *
+ * @see templates/home.php   Homepage template with #particles container
+ * @see assets/css/my.css    Particle CSS + float animation
+ *
+ * @package FrontendLinks
  */
 
 // ─── Particles System ────────────────────────────────────────

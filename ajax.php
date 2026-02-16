@@ -1,8 +1,30 @@
 <?php
 /**
- * Frontend Links - Dedicated AJAX endpoint
- * This file loads YOURLS independently from the admin template,
- * verifies authentication and nonce, then processes CRUD actions.
+ * Frontend Links - AJAX Endpoint
+ * ================================
+ *
+ * Standalone file that handles all admin CRUD operations via AJAX.
+ * Called by assets/js/admin.js through fetch() POST requests.
+ *
+ * Security:
+ *   - Loads YOURLS independently (not inside admin template)
+ *   - Verifies user authentication (yourls_is_valid_user)
+ *   - Verifies nonce (protects against CSRF)
+ *   - Only accepts POST requests
+ *
+ * Supported actions (via POST fl_action):
+ *   Links:    add_link, edit_link, delete_link
+ *   Sections: add_section, edit_section, delete_section
+ *   Icons:    add_custom_icon, delete_custom_icon
+ *   Profile:  update_profile, delete_avatar, restore_avatar
+ *   Options:  update_display_mode, update_shorturl_option
+ *
+ * Response format: JSON { success: bool, message: string, data?: object }
+ *
+ * @see assets/js/admin.js   JavaScript that calls this endpoint
+ * @see templates/admin.php  Admin UI that displays the data
+ *
+ * @package FrontendLinks
  */
 
 // Load YOURLS (3 levels: plugins/frontend-links/ → plugins/ → user/ → YOURLS root)
@@ -143,6 +165,14 @@ switch ($action) {
         $includePath = isset($_POST['shorturl_include_path']) ? '1' : '0';
         yourls_update_option('fl_shorturl_include_path', $includePath);
         $resp = ['success' => true, 'message' => yourls__('Option updated.', 'frontend-links')];
+        break;
+
+    case 'update_feature_toggles':
+        $disableRedirect = isset($_POST['disable_redirect_page']) ? '1' : '0';
+        $disable404 = isset($_POST['disable_404_page']) ? '1' : '0';
+        yourls_update_option('fl_disable_redirect_page', $disableRedirect);
+        yourls_update_option('fl_disable_404_page', $disable404);
+        $resp = ['success' => true, 'message' => yourls__('Options updated.', 'frontend-links')];
         break;
 
     // ─── Profile & Avatar ────────────────────────────────────

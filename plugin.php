@@ -3,31 +3,74 @@
 Plugin Name: Frontend Links
 Plugin URI: https://github.com/nyerou/yourls.frontend-links
 Description: Customizable link page with section, link, and profile management from the YOURLS admin.
-Version: 1.1
+Version: 1.2
 Author: Nyerou
 Author URI: https://nyerou.link
 */
 
+/**
+ * Frontend Links - Plugin Entry Point
+ * =====================================
+ *
+ * This is the main bootstrap file loaded by YOURLS.
+ * It defines constants, loads dependencies, and registers all hooks.
+ *
+ * Hooks registered:
+ *   - plugins_loaded     → Load textdomain + register admin page + htaccess update
+ *   - activated_*        → Create tables on activation
+ *   - loader_failed      → Serve homepage or 404 in auto mode
+ *   - redirect_shorturl  → Intercept redirects → mini page with OG metadata
+ *   - shorturl (filter)  → Strip subdirectory from displayed short URLs
+ *   - yourls_link (filter) → Strip subdirectory from generated links
+ *   - html_head          → Inject stats link subdirectory fix script
+ *
+ * File structure:
+ *   plugin.php              ← You are here (entry point)
+ *   ajax.php                ← Dedicated AJAX endpoint for admin CRUD
+ *   includes/
+ *     functions.php         ← Core logic (CRUD, URL helpers, file management)
+ *     icons.php             ← Font Awesome + custom icon system
+ *     install.php           ← Database table creation
+ *     render.php            ← Homepage rendering logic
+ *   templates/
+ *     home.php              ← Homepage (link-in-bio page)
+ *     admin.php             ← Admin panel interface
+ *     redirect.php          ← Mini redirect interstitial
+ *     404.php               ← Branded 404 error page
+ *   assets/
+ *     css/admin.css         ← Admin panel styles
+ *     css/pages.css         ← Redirect + 404 page styles
+ *     css/my.css            ← Homepage styles (compiled Tailwind)
+ *     css/all.min.css       ← Font Awesome (vendor)
+ *     js/admin.js           ← Admin panel logic (CSP-compliant)
+ *     js/redirect.js        ← Redirect delay script
+ *     js/app.js             ← Homepage particle system
+ *
+ * @package FrontendLinks
+ * @author  Nyerou
+ * @link    https://github.com/nyerou/yourls.frontend-links
+ */
+
 // No direct access
 if (!defined('YOURLS_ABSPATH')) die();
 
-// Plugin constants
+// ─── Plugin constants ───────────────────────────────────────
 define('FL_PLUGIN_DIR', __DIR__);
 define('FL_PLUGIN_SLUG', basename(__DIR__));
 define('FL_TABLE_PREFIX', 'frontend_');
 
-// Uploads directory inside the plugin itself (user/plugins/frontend-links/uploads/)
+// Uploads directory (user/plugins/frontend-links/uploads/)
 define('FL_UPLOADS_DIR', FL_PLUGIN_DIR . '/uploads');
 define('FL_UPLOADS_URL', yourls_plugin_url(FL_PLUGIN_DIR) . '/uploads');
 
-// Subdirectory for custom icons (uploaded images)
+// Custom icons subdirectory (uploaded images)
 define('FL_ICONS_DIR', FL_UPLOADS_DIR . '/icons');
 define('FL_ICONS_URL', FL_UPLOADS_URL . '/icons');
 
-// AJAX endpoint (dedicated file, outside admin template)
+// AJAX endpoint (standalone file, not inside admin template)
 define('FL_AJAX_URL', yourls_plugin_url(FL_PLUGIN_DIR) . '/ajax.php');
 
-// Load dependencies
+// ─── Load dependencies ──────────────────────────────────────
 require_once FL_PLUGIN_DIR . '/includes/functions.php';
 require_once FL_PLUGIN_DIR . '/includes/icons.php';
 require_once FL_PLUGIN_DIR . '/includes/render.php';
@@ -41,7 +84,7 @@ function fl_load_textdomain() {
 // ─── Register admin page ───────────────────────────────────
 yourls_add_action('plugins_loaded', 'fl_register_admin_page');
 function fl_register_admin_page() {
-    yourls_register_plugin_page('frontend_admin', 'Frontend Links', 'fl_admin_page');
+    yourls_register_plugin_page('frontend_admin', 'Frontend Administration', 'fl_admin_page');
 }
 
 // ─── Create tables on activation ───────────────────────────
@@ -76,6 +119,8 @@ function fl_serve_homepage($args) {
         fl_render_page();
         die();
     }
+    // Short URL not found → branded 404
+    fl_serve_404_page($request);
 }
 
 // ─── Intercept short URL redirects → mini redirect page ─────
@@ -94,6 +139,9 @@ function fl_intercept_shorturl_redirect($args) {
     // Don't intercept admin context
     if (defined('YOURLS_ADMIN')) return;
 
+    // Let YOURLS do its native redirect if branded redirect page is disabled
+    if (yourls_get_option('fl_disable_redirect_page') === '1') return;
+
     fl_serve_redirect_page($keyword, $url);
     exit;
 }
@@ -109,7 +157,42 @@ function fl_filter_shorturl($shorturl) {
 // Also filter the base YOURLS link generation
 yourls_add_filter('yourls_link', 'fl_filter_shorturl');
 
+// ─── Fix stats links subdirectory ────────────────────────────
+// The shorturl filter above strips the YOURLS subdirectory from displayed
+// short URLs. YOURLS admin JS builds stats links by appending "+" to the
+// displayed short URL, producing e.g. "https://example.com/keyword+" instead
+// of "https://example.com/yourls/keyword+". This script adds the subdirectory
+// back to stats links so they reach YOURLS correctly.
+yourls_add_action('html_head', 'fl_inject_stats_fix_js');
+function fl_inject_stats_fix_js() {
+    $basePath = fl_get_yourls_base_path();
+    if ($basePath === '') return; // No subdirectory, nothing to fix
+
+    $jsUrl   = yourls_plugin_url(FL_PLUGIN_DIR) . '/assets/js/stats-rewrite.js';
+    $rootUrl = fl_get_root_url();
+
+    echo '<script src="' . fl_escape($jsUrl) . '"'
+        . ' data-base-path="' . fl_escape($basePath) . '"'
+        . ' data-root-url="' . fl_escape($rootUrl) . '"'
+        . ' defer></script>' . "\n";
+}
+
+// ─── Auto-update .htaccess when rules change ────────────────
+// Regenerates the root .htaccess if the plugin rules version has changed.
+// This ensures rewrite rules stay up to date without requiring
+// the user to manually re-save the display mode.
+yourls_add_action('plugins_loaded', 'fl_maybe_update_htaccess');
+function fl_maybe_update_htaccess() {
+    if (yourls_get_option('fl_display_mode') !== 'auto') return;
+
+    $currentVersion = '4'; // Bump this when .htaccess rules change
+    if (yourls_get_option('fl_htaccess_version', '0') !== $currentVersion) {
+        fl_create_homepage_file();
+        yourls_update_option('fl_htaccess_version', $currentVersion);
+    }
+}
+
 // ─── Display admin page ────────────────────────────────────
 function fl_admin_page() {
-    require_once FL_PLUGIN_DIR . '/includes/admin-page.php';
+    require_once FL_PLUGIN_DIR . '/templates/admin.php';
 }

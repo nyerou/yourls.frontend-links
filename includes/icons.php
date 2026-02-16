@@ -1,6 +1,30 @@
 <?php
 /**
- * Frontend Links - Font Awesome + custom (DB) icon system
+ * Frontend Links - Icon System
+ * ==============================
+ *
+ * Provides a unified icon API for the plugin. Icons come from two sources:
+ *
+ *   1. Built-in Font Awesome icons (brands + solid)
+ *      Defined statically in fl_get_builtin_icons().
+ *      Rendered as <i class="fa-..."> tags.
+ *
+ *   2. Custom icons from the database
+ *      Added by users via the admin panel.
+ *      Two types: SVG code (inline) or uploaded images.
+ *
+ * Main functions:
+ *   fl_get_builtin_icons()     — Static FA icon definitions
+ *   fl_get_available_icons()   — Merged list (FA + custom) for <select> dropdowns
+ *   fl_get_icon($name, $size)  — Returns the HTML for any icon by name
+ *
+ * On the public page, custom image icons get CSS filter coloring
+ * via the .fl-icon-img class (see assets/css/my.css).
+ *
+ * @see includes/functions.php  fl_get_custom_icons(), fl_create_custom_icon()
+ * @see templates/admin.php     Icon management UI
+ *
+ * @package FrontendLinks
  */
 
 if (!defined('YOURLS_ABSPATH')) die();

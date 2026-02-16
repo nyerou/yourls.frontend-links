@@ -1,0 +1,132 @@
+/**
+ * Frontend Links - Admin Panel Stylesheet
+ * ========================================
+ *
+ * Styles for the YOURLS admin page of the Frontend Links plugin.
+ * These styles extend the native YOURLS admin design with:
+ *   - Toast notifications (success/error)
+ *   - Collapsible panels with animated arrows
+ *   - Modal dialogs (overlay + centered box)
+ *   - Fade-out animation for deleted rows
+ *
+ * Note: This file is loaded ONLY inside the YOURLS admin.
+ * It does NOT affect the public-facing pages.
+ *
+ * @see templates/admin.php
+ * @see assets/js/admin.js
+ */
+
+
+/* ============================================================
+   1. TOAST NOTIFICATIONS
+   Fixed top-right notification with slide-in animation.
+   ============================================================ */
+
+.fl-toast {
+    position: fixed;
+    top: 32px;
+    right: 20px;
+    padding: 10px 18px;
+    border-radius: 4px;
+    z-index: 100001;
+    font-size: 13px;
+    max-width: 400px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+}
+
+.fl-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.fl-toast.success {
+    background: #dff0d8;
+    color: #3c763d;
+    border: 1px solid #d6e9c6;
+}
+
+.fl-toast.error {
+    background: #f2dede;
+    color: #a94442;
+    border: 1px solid #ebccd1;
+}
+
+
+/* ============================================================
+   2. COLLAPSIBLE PANELS
+   Click the heading to toggle content visibility.
+   ============================================================ */
+
+.fl-panel-toggle {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fl-panel-toggle:hover {
+    opacity: 0.8;
+}
+
+/* Arrow indicator (rotates 90deg when open) */
+.fl-panel-toggle .fl-arrow {
+    transition: transform 0.2s;
+    font-size: 10px;
+    color: #888;
+}
+
+.fl-panel-toggle .fl-arrow.open {
+    transform: rotate(90deg);
+}
+
+
+/* ============================================================
+   3. MODAL DIALOGS
+   Full-screen overlay with centered content box.
+   ============================================================ */
+
+.fl-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+}
+
+.fl-modal-box {
+    background: #fff;
+    border-radius: 6px;
+    padding: 20px 24px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.fl-modal-box h3 {
+    margin: 0 0 16px;
+}
+
+
+/* ============================================================
+   4. TABLE ACTIONS & ANIMATIONS
+   ============================================================ */
+
+/* Prevent action links from wrapping */
+.fl-actions a {
+    white-space: nowrap;
+}
+
+/* Fade-out animation for deleted table rows */
+tr.fl-fade-out {
+    opacity: 0;
+    transition: opacity 0.3s;
+}

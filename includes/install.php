@@ -1,7 +1,23 @@
 <?php
 /**
- * Frontend Links - Table installation
- * Executed on plugin activation
+ * Frontend Links - Database Installation
+ * ========================================
+ *
+ * Creates the plugin's MySQL tables on first activation.
+ * All tables use InnoDB + utf8mb4 and are prefixed with FL_TABLE_PREFIX.
+ *
+ * Tables created:
+ *   frontend_settings  — Key/value plugin settings (profile name, bio, etc.)
+ *   frontend_sections  — Link sections (groups) with sort order
+ *   frontend_links     — Individual links (URL, label, icon, section FK)
+ *   frontend_icons     — Custom icons (SVG code or uploaded image filename)
+ *
+ * Default data is inserted on first install (sample sections + links).
+ * Subsequent activations are safe (CREATE TABLE IF NOT EXISTS).
+ *
+ * @see plugin.php  fl_on_activate() triggers this on activation
+ *
+ * @package FrontendLinks
  */
 
 if (!defined('YOURLS_ABSPATH')) die();
