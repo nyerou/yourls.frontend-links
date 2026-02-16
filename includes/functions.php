@@ -103,6 +103,28 @@ function fl_tables_exist(): bool {
     }
 }
 
+// ─── SVG Sanitization ───────────────────────────────────────
+
+/**
+ * Sanitize SVG content by removing dangerous elements and attributes.
+ * Prevents stored XSS via <script> tags, event handlers, javascript: URLs,
+ * and <foreignObject> (which can embed arbitrary HTML).
+ */
+function fl_sanitize_svg(string $svg): string {
+    // Remove <script> tags and their content
+    $svg = preg_replace('#<script[^>]*>.*?</script>#is', '', $svg);
+    // Remove event handlers (onclick, onload, onerror, etc.)
+    $svg = preg_replace('#\s+on\w+\s*=\s*["\'][^"\']*["\']#is', '', $svg);
+    $svg = preg_replace('#\s+on\w+\s*=\s*[^\s>]+#is', '', $svg);
+    // Remove javascript: and data: URLs in href/xlink:href
+    $svg = preg_replace('#(href|xlink:href)\s*=\s*["\'](?:javascript|data):[^"\']*["\']#is', '', $svg);
+    // Remove <foreignObject> (can contain arbitrary HTML/JS)
+    $svg = preg_replace('#<foreignObject[^>]*>.*?</foreignObject>#is', '', $svg);
+    // Remove <use> with external references (can bypass CSP)
+    $svg = preg_replace('#<use[^>]+href\s*=\s*["\']https?://[^"\']*["\'][^>]*/?\s*>#is', '', $svg);
+    return $svg;
+}
+
 // ─── Avatar Management ──────────────────────────────────────
 // Only 2 files are kept in the uploads folder:
 //   fl_avatars_current.<ext>   → active avatar
@@ -334,6 +356,14 @@ function fl_upload_icon_image(array $file, string $name): string|false {
         return false;
     }
 
+    // Sanitize uploaded SVG files to prevent stored XSS
+    if ($mime === 'image/svg+xml') {
+        $svgContent = file_get_contents($dest);
+        if ($svgContent !== false) {
+            file_put_contents($dest, fl_sanitize_svg($svgContent));
+        }
+    }
+
     return $filename;
 }
 
@@ -398,6 +428,16 @@ function fl_fetch_target_meta(string $url): array {
     ];
 
     if (!function_exists('curl_init')) return $result;
+
+    // SSRF protection: only allow http(s) and block private/reserved IPs
+    $parsed = parse_url($url);
+    if (!in_array($parsed['scheme'] ?? '', ['http', 'https'])) return $result;
+    $host = $parsed['host'] ?? '';
+    if ($host === '') return $result;
+    $ip = gethostbyname($host);
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+        return $result;
+    }
 
     $ch = curl_init($url);
     curl_setopt_array($ch, [

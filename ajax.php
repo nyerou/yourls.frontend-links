@@ -245,6 +245,8 @@ switch ($action) {
                 $resp = ['success' => false, 'message' => yourls__('Invalid or empty SVG code.', 'frontend-links')];
                 break;
             }
+            // Sanitize SVG to prevent stored XSS
+            $svgContent = fl_sanitize_svg($svgContent);
             $result = fl_create_custom_icon(['name' => $iconName, 'type' => 'svg', 'content' => $svgContent]);
         } else {
             if (empty($_FILES['icon_file']['name'])) {

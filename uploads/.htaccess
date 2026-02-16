@@ -1,0 +1,13 @@
+# Frontend Links - Uploads directory security
+# Prevents PHP execution and adds security headers for served files.
+
+# Block PHP execution in this directory
+<FilesMatch "\.php$">
+    Require all denied
+</FilesMatch>
+
+# Serve SVG files with correct content type and prevent script execution
+<FilesMatch "\.svg$">
+    Header set Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'"
+    Header set X-Content-Type-Options "nosniff"
+</FilesMatch>
