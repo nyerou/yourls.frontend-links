@@ -21,6 +21,23 @@ Link-in-bio page plugin for YOURLS — manage sections, links, profile and custo
 - **Security**: SVG sanitization (XSS prevention), SSRF protection on URL fetching, uploads directory lockdown
 - **i18n ready** with French translation included
 
+## Screenshots
+
+### Sections & Links management
+![Sections and links CRUD](screens/links-sections-demo-add_edit_delete.gif)
+
+### Profile & Avatar
+![Profile and avatar management](screens/profile-avatars-demo.gif)
+
+### Custom icons
+![Adding custom icons](screens/add-icons-demo.png)
+
+### Settings & Feature toggles
+![Options panel and feature toggles](screens/settings-infos-demo.png)
+
+### Social preview (Discord)
+![Discord embed with OG metadata](screens/meta-seo-demo-discord.png)
+
 ## Requirements
 
 - [YOURLS](https://yourls.org/) 1.9+
