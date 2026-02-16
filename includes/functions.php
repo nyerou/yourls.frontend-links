@@ -378,6 +378,83 @@ function fl_normalize_url(string $url): string {
     return $baseUrl . '/' . ltrim($url, '/');
 }
 
+// ─── Target URL Metadata ────────────────────────────────────
+
+/**
+ * Fetch OG metadata from a target URL.
+ *
+ * Extracts: <title>, og:image, og:type, og:description (or meta description),
+ * and theme-color. Uses a short timeout to avoid blocking the redirect page.
+ *
+ * @return array{title:string, description:string, image:string, type:string, theme_color:string}
+ */
+function fl_fetch_target_meta(string $url): array {
+    $result = [
+        'title'       => '',
+        'description' => '',
+        'image'       => '',
+        'type'        => '',
+        'theme_color' => '',
+    ];
+
+    if (!function_exists('curl_init')) return $result;
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS      => 3,
+        CURLOPT_TIMEOUT        => 2,
+        CURLOPT_CONNECTTIMEOUT => 1,
+        CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; FrontendLinks/1.2; +' . YOURLS_SITE . ')',
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+
+    $html = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if (!$html || $httpCode >= 400) return $result;
+
+    // Only parse <head> for performance
+    if (preg_match('#<head[^>]*>(.*?)</head>#is', $html, $m)) {
+        $head = $m[1];
+    } else {
+        return $result;
+    }
+
+    // <title> tag
+    if (preg_match('#<title[^>]*>(.*?)</title>#is', $head, $m)) {
+        $result['title'] = html_entity_decode(trim($m[1]), ENT_QUOTES, 'UTF-8');
+    }
+
+    // Collect all <meta> tags into a property → content map
+    $metas = [];
+    preg_match_all('#<meta\s+([^>]+)>#is', $head, $tags);
+    foreach ($tags[1] as $attrs) {
+        $key = '';
+        $content = '';
+        if (preg_match('#(?:property|name)\s*=\s*["\']([^"\']+)["\']#i', $attrs, $a)) {
+            $key = strtolower($a[1]);
+        }
+        if (preg_match('#content\s*=\s*["\']([^"\']*)["\']#i', $attrs, $a)) {
+            $content = $a[1];
+        }
+        if ($key !== '' && $content !== '') {
+            $metas[$key] = html_entity_decode($content, ENT_QUOTES, 'UTF-8');
+        }
+    }
+
+    if (!empty($metas['og:description']))  $result['description'] = $metas['og:description'];
+    elseif (!empty($metas['description'])) $result['description'] = $metas['description'];
+
+    if (!empty($metas['og:image']))   $result['image']       = $metas['og:image'];
+    if (!empty($metas['og:type']))    $result['type']        = $metas['og:type'];
+    if (!empty($metas['theme-color'])) $result['theme_color'] = $metas['theme-color'];
+
+    return $result;
+}
+
 // ─── Short URL Resolution ───────────────────────────────────
 
 /**
@@ -435,13 +512,23 @@ function fl_serve_redirect_page(string $keyword, string $url): void {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $linkTitle = !empty($row['title']) ? $row['title'] : $keyword;
 
+    // Fetch OG metadata from the target page
+    $targetMeta  = fl_fetch_target_meta($url);
+
     // Template variables
     $shortUrl    = fl_get_root_url() . '/' . $keyword;
     $settings    = fl_tables_exist() ? fl_get_settings() : [];
     $authorName  = $settings['profile_name'] ?? parse_url(YOURLS_SITE, PHP_URL_HOST);
-    $siteImage   = $settings['profile_avatar'] ?? '';
-    $ogTitle     = $authorName . ' → ' . $linkTitle;
     $e           = 'fl_escape';
+
+    // Meta tags: identity of the target page, authored by our domain
+    $metaAuthor      = parse_url(YOURLS_SITE, PHP_URL_HOST);
+    $metaTitle       = $targetMeta['title'] ?: $linkTitle;
+    $metaDescription = $targetMeta['description'] ?: $linkTitle;
+    $metaImage       = $targetMeta['image'] ?: ($settings['profile_avatar'] ?? '');
+    $metaType        = $targetMeta['type'] ?: 'website';
+    $metaThemeColor  = $targetMeta['theme_color'];
+    $twitterCard     = $metaImage ? 'summary_large_image' : 'summary';
 
     // Clean URLs for display (strip protocol, query string, trailing slash)
     $cleanShort  = preg_replace('#^https?://#', '', rtrim($shortUrl, '/'));
