@@ -23,7 +23,7 @@
 if (!defined('YOURLS_ABSPATH')) die();
 
 function fl_install_tables() {
-    $db = yourls_get_db();
+    $db = yourls_get_db('write-fl_install_tables');
     $prefix = FL_TABLE_PREFIX;
 
     // Settings table
@@ -81,7 +81,7 @@ function fl_install_tables() {
 }
 
 function fl_insert_defaults() {
-    $db = yourls_get_db();
+    $db = yourls_get_db('write-fl_insert_defaults');
     $prefix = FL_TABLE_PREFIX;
 
     // Check if settings already exist

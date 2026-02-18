@@ -1,0 +1,250 @@
+/**
+ * Default Theme - Homepage Stylesheet
+ * =====================================
+ *
+ * Clean, minimal design with system fonts and neutral colors.
+ * No frameworks, no build tools.
+ */
+
+/* ── Color variables ───────────────────────────── */
+:root {
+    --fl-page-bg:             #fafafa;
+    --fl-card-bg:             #fff;
+    --fl-card-border:         #e5e5e5;
+    --fl-card-shadow:         rgba(0, 0, 0, 0.06);
+    --fl-text:                #1a1a1a;
+    --fl-text-muted:          #666;
+    --fl-avatar-bg:           #f0f0f0;
+    --fl-avatar-border:       #e5e5e5;
+    --fl-initials:            #888;
+    --fl-section-title:       #999;
+    --fl-link-border:         #e5e5e5;
+    --fl-link-hover-bg:       #f5f5f5;
+    --fl-link-hover-border:   #ccc;
+    --fl-icon:                #888;
+    --fl-icon-hover:          #333;
+    --fl-footer:              #aaa;
+    --fl-admin-bg:            #f0f0f0;
+    --fl-admin-border:        transparent;
+    --fl-admin-color:         #999;
+    --fl-admin-hover-bg:      #e5e5e5;
+    --fl-admin-hover-border:  transparent;
+    --fl-admin-hover-color:   #666;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --fl-page-bg:             #111;
+        --fl-card-bg:             #1c1c1c;
+        --fl-card-border:         #2d2d2d;
+        --fl-card-shadow:         rgba(0, 0, 0, 0.4);
+        --fl-text:                #e8e8e8;
+        --fl-text-muted:          #999;
+        --fl-avatar-bg:           #2a2a2a;
+        --fl-avatar-border:       #383838;
+        --fl-initials:            #888;
+        --fl-section-title:       #555;
+        --fl-link-border:         #2d2d2d;
+        --fl-link-hover-bg:       #252525;
+        --fl-link-hover-border:   #404040;
+        --fl-icon:                #666;
+        --fl-icon-hover:          #bbb;
+        --fl-footer:              #555;
+        --fl-admin-bg:            #2a2a2a;
+        --fl-admin-border:        #333;
+        --fl-admin-color:         #888;
+        --fl-admin-hover-bg:      #333;
+        --fl-admin-hover-border:  #444;
+        --fl-admin-hover-color:   #bbb;
+    }
+}
+
+/* ── Reset ─────────────────────────────────────── */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ── Base ──────────────────────────────────────── */
+body {
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--fl-page-bg);
+    color: var(--fl-text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ────────────────────────────────────── */
+.fl-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+}
+
+.fl-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--fl-card-bg);
+    border: 1px solid var(--fl-card-border);
+    border-radius: 12px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 1px 3px var(--fl-card-shadow);
+}
+
+/* ── Profile ───────────────────────────────────── */
+.fl-profile {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.fl-avatar {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--fl-avatar-bg);
+    border: 2px solid var(--fl-avatar-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fl-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.fl-initials {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--fl-initials);
+}
+
+.fl-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--fl-text);
+}
+
+.fl-bio {
+    font-size: 0.85rem;
+    color: var(--fl-text-muted);
+    margin-top: 0.25rem;
+}
+
+/* ── Sections ──────────────────────────────────── */
+.fl-section {
+    margin-bottom: 1.5rem;
+}
+
+.fl-section:last-child {
+    margin-bottom: 0;
+}
+
+.fl-section-title {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fl-section-title);
+    margin-bottom: 0.5rem;
+    padding-left: 0.25rem;
+}
+
+/* ── Links ─────────────────────────────────────── */
+.fl-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--fl-link-border);
+    border-radius: 8px;
+    color: var(--fl-text);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.fl-link:last-child {
+    margin-bottom: 0;
+}
+
+.fl-link:hover {
+    background: var(--fl-link-hover-bg);
+    border-color: var(--fl-link-hover-border);
+}
+
+.fl-link-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: var(--fl-icon);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fl-link-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.fl-link-icon i {
+    color: var(--fl-icon);
+}
+
+.fl-link:hover .fl-link-icon,
+.fl-link:hover .fl-link-icon i {
+    color: var(--fl-icon-hover);
+}
+
+.fl-link-icon .fl-icon-img {
+    display: inline-block;
+    opacity: 0.6;
+    transition: opacity 0.15s;
+}
+
+.fl-link:hover .fl-link-icon .fl-icon-img {
+    opacity: 0.9;
+}
+
+.fl-link-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* ── Footer ────────────────────────────────────── */
+.fl-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    font-size: 0.7rem;
+    color: var(--fl-footer);
+}
+
+.fl-admin-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: var(--fl-admin-bg);
+    border: 1px solid var(--fl-admin-border);
+    color: var(--fl-admin-color);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.fl-admin-link:hover {
+    background: var(--fl-admin-hover-bg);
+    border-color: var(--fl-admin-hover-border);
+    color: var(--fl-admin-hover-color);
+}

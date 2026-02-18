@@ -44,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fl_action']) && $_POS
     fl_install_tables();
     if (!is_dir(FL_UPLOADS_DIR)) mkdir(FL_UPLOADS_DIR, 0755, true);
     if (!is_dir(FL_ICONS_DIR)) mkdir(FL_ICONS_DIR, 0755, true);
+    fl_write_uploads_htaccess();
     $fl_success = yourls__('Installation complete! Tables and default data have been created.', 'frontend-links');
 }
 
@@ -84,6 +85,8 @@ $sections = fl_get_sections(false);
 $links = fl_get_links(false);
 $availableIcons = fl_get_available_icons();
 $customIcons = fl_get_custom_icons();
+$activeTheme = fl_get_active_theme();
+$availableThemes = fl_get_available_themes();
 $displayMode = yourls_get_option('fl_display_mode', 'manual');
 $shorturlIncludePath = yourls_get_option('fl_shorturl_include_path', '0');
 $disableRedirectPage = yourls_get_option('fl_disable_redirect_page', '0');
@@ -347,7 +350,35 @@ $exPath = rtrim($parsed['path'] ?? '', '/');
 </h2>
 <div id="fl-panel-options" style="display:none;">
 
-    <h3><?php yourls_e('Display mode', 'frontend-links'); ?></h3>
+    <h3><?php yourls_e('Theme', 'frontend-links'); ?></h3>
+    <form id="fl-form-theme" data-fl-submit="ajax">
+        <input type="hidden" name="fl_action" value="update_theme">
+        <input type="hidden" name="nonce" value="<?= $nonce ?>">
+        <table class="form-table">
+            <tr>
+                <th><label for="fl_theme"><?php yourls_e('Active theme', 'frontend-links'); ?></label></th>
+                <td>
+                    <select name="theme" id="fl_theme">
+                        <?php foreach ($availableThemes as $slug => $meta): ?>
+                        <option value="<?= fl_escape($slug) ?>" <?= $slug === $activeTheme ? 'selected' : '' ?>>
+                            <?= fl_escape($meta['name'] ?? $slug) ?>
+                            <?php if (!empty($meta['author'])): ?> &mdash; <?= fl_escape($meta['author']) ?><?php endif; ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <?php
+                    $currentMeta = $availableThemes[$activeTheme] ?? [];
+                    if (!empty($currentMeta['description'])):
+                    ?>
+                    <br><span style="color:#666;font-size:11px;"><?= fl_escape($currentMeta['description']) ?></span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+        </table>
+        <p><input type="submit" class="button button-primary" value="<?= fl_escape(yourls__('Save theme', 'frontend-links')) ?>"></p>
+    </form>
+
+    <h3 style="margin-top:20px;"><?php yourls_e('Display mode', 'frontend-links'); ?></h3>
     <form id="fl-form-display-mode" data-fl-submit="ajax">
         <input type="hidden" name="fl_action" value="update_display_mode">
         <input type="hidden" name="nonce" value="<?= $nonce ?>">
@@ -442,6 +473,12 @@ fl_render_page();</pre>
     <span class="fl-arrow">&#9654;</span> <?php yourls_e('Information', 'frontend-links'); ?>
 </h2>
 <div id="fl-panel-info" style="display:none;">
+    <?php
+    $flExtensions = [
+        'fileinfo' => yourls__('File uploads (avatar, icons)', 'frontend-links'),
+        'curl'     => yourls__('OG metadata fetching (redirect page)', 'frontend-links'),
+    ];
+    ?>
     <table class="form-table">
         <tr><th><?php yourls_e('YOURLS Site', 'frontend-links'); ?></th><td><code><?= fl_escape(YOURLS_SITE) ?></code></td></tr>
         <tr><th><?php yourls_e('Detected path', 'frontend-links'); ?></th><td><code><?= fl_escape($yourlsBasePath ?: yourls__('(root)', 'frontend-links')) ?></code></td></tr>
@@ -451,6 +488,22 @@ fl_render_page();</pre>
         <?php if ($homepageFilePath): ?>
         <tr><th><?php yourls_e('Auto index.php file', 'frontend-links'); ?></th><td><code><?= fl_escape($homepageFilePath) ?></code></td></tr>
         <?php endif; ?>
+        <tr><th><?php yourls_e('PHP version', 'frontend-links'); ?></th><td><code><?= fl_escape(PHP_VERSION) ?></code></td></tr>
+        <tr>
+            <th><?php yourls_e('PHP extensions', 'frontend-links'); ?></th>
+            <td>
+                <?php foreach ($flExtensions as $ext => $desc):
+                    $loaded = extension_loaded($ext);
+                ?>
+                <div style="margin-bottom:4px;">
+                    <span style="display:inline-block;min-width:90px;padding:2px 8px;border-radius:3px;font-size:12px;font-weight:600;color:#fff;background:<?= $loaded ? '#2e7d32' : '#b71c1c' ?>;margin-right:8px;">
+                        <?= $loaded ? '✓' : '✗' ?> <?= fl_escape($ext) ?>
+                    </span>
+                    <span style="color:#666;font-size:12px;"><?= fl_escape($desc) ?></span>
+                </div>
+                <?php endforeach; ?>
+            </td>
+        </tr>
     </table>
 </div>
 

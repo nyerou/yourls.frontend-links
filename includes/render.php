@@ -3,20 +3,18 @@
  * Frontend Links - Homepage Rendering Logic
  * ===========================================
  *
- * Prepares all template variables then loads templates/home.php.
+ * Prepares all template variables then loads the active theme's home.php.
  * This file contains ONLY logic — no HTML output.
- *
- * To customize the homepage design, edit templates/home.php instead.
- * To customize the homepage styles, edit assets/css/my.css.
  *
  * Variables prepared for the template:
  *   $profileName, $profileBio, $profileAvatar, $initials
- *   $metaTitle, $metaDescription, $siteUrl, $assetsUrl
+ *   $metaTitle, $metaDescription, $siteUrl
+ *   $sharedAssetsUrl  — Plugin shared assets (Font Awesome, redirect.js)
+ *   $themeAssetsUrl   — Active theme's assets (CSS, JS)
+ *   $assetsUrl        — Alias for $sharedAssetsUrl (backward compat)
  *   $adminPageUrl, $htmlLang, $sections, $linksBySection, $e
  *
- * @see templates/home.php  The HTML template loaded by this file
- * @see assets/css/my.css   Homepage stylesheet (compiled Tailwind)
- * @see assets/js/app.js    Homepage JavaScript (particle system)
+ * @see includes/themes.php  Theme resolution logic
  *
  * @package FrontendLinks
  */
@@ -52,12 +50,16 @@ function fl_render_page(): void {
     $profileAvatar  = $settings['profile_avatar'] ?? '';
     $metaTitle      = $settings['meta_title'] ?? $profileName . yourls__(' - Links', 'frontend-links');
     $metaDescription = $settings['meta_description'] ?? $profileBio;
-    $siteUrl        = fl_get_root_url();
-    $assetsUrl      = yourls_plugin_url(FL_PLUGIN_DIR) . '/assets';
-    $adminPageUrl   = yourls_admin_url();
+    $siteUrl         = fl_get_root_url();
+    $sharedAssetsUrl = yourls_plugin_url(FL_PLUGIN_DIR) . '/assets';
+    $themeAssetsUrl  = fl_get_theme_assets_url();
+    $assetsUrl       = $sharedAssetsUrl;
+    $adminPageUrl    = yourls_admin_url();
     $initials       = implode('', array_map(fn($w) => mb_substr($w, 0, 1), explode(' ', $profileName)));
     $htmlLang       = substr(yourls_get_locale(), 0, 2);
     $e              = 'fl_escape';
 
-    require FL_PLUGIN_DIR . '/templates/home.php';
+    ob_start();
+    require fl_get_theme_template('home.php');
+    echo fl_inject_generator(ob_get_clean());
 }

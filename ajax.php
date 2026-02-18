@@ -17,7 +17,7 @@
  *   Sections: add_section, edit_section, delete_section
  *   Icons:    add_custom_icon, delete_custom_icon
  *   Profile:  update_profile, delete_avatar, restore_avatar
- *   Options:  update_display_mode, update_shorturl_option
+ *   Options:  update_display_mode, update_shorturl_option, update_theme
  *
  * Response format: JSON { success: bool, message: string, data?: object }
  *
@@ -165,6 +165,17 @@ switch ($action) {
         $includePath = isset($_POST['shorturl_include_path']) ? '1' : '0';
         yourls_update_option('fl_shorturl_include_path', $includePath);
         $resp = ['success' => true, 'message' => yourls__('Option updated.', 'frontend-links')];
+        break;
+
+    case 'update_theme':
+        $theme = preg_replace('/[^a-z0-9_-]/', '', strtolower(trim($_POST['theme'] ?? '')));
+        $themes = fl_get_available_themes();
+        if ($theme !== '' && isset($themes[$theme])) {
+            yourls_update_option('fl_active_theme', $theme);
+            $resp = ['success' => true, 'message' => sprintf(yourls__('Theme changed to "%s".', 'frontend-links'), $themes[$theme]['name'] ?? $theme)];
+        } else {
+            $resp = ['success' => false, 'message' => yourls__('Invalid theme.', 'frontend-links')];
+        }
         break;
 
     case 'update_feature_toggles':

@@ -1,4 +1,4 @@
-# Frontend Links - YOURLS Plugin
+# Frontend Links [![Listed in Awesome YOURLS!](https://img.shields.io/badge/Awesome-YOURLS%20Plugin-C5A3BE)](https://github.com/YOURLS/awesome-yourls/)
 
 Link-in-bio page plugin for YOURLS — manage sections, links, profile and custom icons from the admin panel.
 
@@ -7,6 +7,8 @@ Link-in-bio page plugin for YOURLS — manage sections, links, profile and custo
 - **Sections & Links** management with drag-friendly sort order
 - **Profile** customization (name, bio, avatar with upload/restore)
 - **Custom icons** (SVG code or image upload) alongside built-in Font Awesome icons
+- **Theme system**: switchable themes from the admin; each theme has its own templates and assets
+- **Default theme**: minimal responsive design with automatic light/dark mode (system preference)
 - **Social previews**: redirect page fetches `og:image`, `og:type`, `og:description`, `theme-color` and `<title>` from the target URL for accurate social link previews (Discord, Slack, Twitter, Facebook)
 - **Branded redirect page**: interstitial with target page metadata before redirecting (can be disabled)
 - **Branded 404 page**: custom error page matching your site design (can be disabled)
@@ -51,7 +53,8 @@ Link-in-bio page plugin for YOURLS — manage sections, links, profile and custo
 ## Requirements
 
 - [YOURLS](https://yourls.org/) 1.9+
-- PHP 8.0+ with cURL extension
+- PHP 8.0+
+- PHP extensions: `fileinfo` (avatar & icon uploads), `curl` (OG metadata fetching)
 - Apache with `mod_rewrite` (for auto mode)
 
 ## Installation
@@ -76,6 +79,17 @@ Manual mode example:
 require_once __DIR__ . '/yourls/includes/load-yourls.php';
 fl_render_page();
 ```
+
+### Themes
+
+Themes live in `themes/<slug>/` and contain a `theme.json` manifest, a `templates/` folder (`home.php`, `redirect.php`, `404.php`) and an `assets/` folder. The active theme is selected from **Options → Theme** in the admin panel.
+
+Bundled themes:
+
+| Slug              | Description                                              |
+| ----------------- | -------------------------------------------------------- |
+| `default`         | Minimal, responsive. Adapts to system light/dark mode.   |
+| `nyerou-original` | Dark glassmorphism design with animated particle system. |
 
 ### Features
 
@@ -113,25 +127,41 @@ frontend-links/
 │   ├── functions.php       # Core logic (CRUD, URL helpers, file management)
 │   ├── icons.php           # Font Awesome + custom icon system
 │   ├── install.php         # Database table creation
-│   └── render.php          # Homepage rendering logic
+│   ├── render.php          # Homepage rendering logic
+│   └── themes.php          # Theme resolution and discovery
 ├── templates/
-│   ├── home.php            # Homepage (link-in-bio page)
-│   ├── admin.php           # Admin panel interface
-│   ├── redirect.php        # Branded redirect interstitial
-│   └── 404.php             # Branded 404 error page
-├── assets/
+│   └── admin.php           # Admin panel interface (not themed)
+├── assets/                 # Shared assets (not themed)
 │   ├── css/
 │   │   ├── admin.css       # Admin panel styles
-│   │   ├── pages.css       # Redirect + 404 page styles
-│   │   ├── my.css          # Homepage styles (compiled Tailwind)
 │   │   └── all.min.css     # Font Awesome (vendor)
 │   └── js/
 │       ├── admin.js        # Admin panel logic (CSP-compliant)
 │       ├── redirect.js     # Redirect delay script
-│       ├── stats-rewrite.js # Stats link subdirectory fix
-│       └── app.js          # Homepage particle system
+│       └── stats-rewrite.js # Stats link subdirectory fix
+├── themes/
+│   ├── default/            # Minimal light/dark theme (active by default)
+│   │   ├── theme.json
+│   │   ├── templates/
+│   │   │   ├── home.php
+│   │   │   ├── redirect.php
+│   │   │   └── 404.php
+│   │   └── assets/css/
+│   │       ├── home.css
+│   │       └── pages.css
+│   └── nyerou-original/    # Dark glassmorphism theme with particles
+│       ├── theme.json
+│       ├── templates/
+│       │   ├── home.php
+│       │   ├── redirect.php
+│       │   └── 404.php
+│       └── assets/
+│           ├── css/
+│           │   ├── home.css
+│           │   └── pages.css
+│           └── js/
+│               └── app.js
 ├── uploads/                # Avatars & custom icon images (gitignored)
-│   ├── .htaccess           # Security: no PHP execution, SVG headers
 │   └── icons/
 └── languages/              # Translation files (.pot, .po)
 ```
@@ -140,37 +170,14 @@ frontend-links/
 
 - **SVG sanitization**: all SVG input (code and file uploads) is stripped of `<script>` tags, event handlers, `javascript:` URLs, `<foreignObject>` and external `<use>` references
 - **SSRF protection**: target URL metadata fetching only allows `http`/`https` schemes and blocks private/reserved IP ranges
-- **Uploads lockdown**: `.htaccess` blocks PHP execution, adds `Content-Security-Policy` and `X-Content-Type-Options: nosniff` for SVG files
+- **Uploads lockdown**: `.htaccess` auto-generated at activation — blocks PHP execution, adds `Content-Security-Policy` and `X-Content-Type-Options: nosniff` for SVG files, with the correct `RewriteBase` for root and subdirectory installs
 - **CSRF protection**: all AJAX requests verified with YOURLS nonces
 - **Authentication**: admin panel and AJAX endpoint require YOURLS authentication
 - **Prepared statements**: all database queries use parameterized queries (PDO)
 
 ## Changelog
 
-### 1.2
-
-- Admin page renamed to "Frontend Administration"
-- Redirect page now fetches OG metadata from target URL (image, type, description, theme-color, title)
-- Author in meta tags is now the shortener domain (e.g. `nyerou.link`)
-- All CSS and JS externalized to separate asset files (CSP compliant with YOURLS 1.10+)
-- New templates directory: `home.php`, `admin.php`, `redirect.php`, `404.php`
-- Branded redirect interstitial page with target page metadata for social previews
-- Branded 404 error page with glass-card design
-- Feature toggles to disable branded redirect and/or 404 pages
-- Stats links fixed to include YOURLS subdirectory when stripped by short URL filter
-- Security: SVG sanitization, SSRF protection, uploads directory lockdown
-- Comprehensive file header comments on all source files
-
-### 1.1
-
-- Subdirectory support: short URLs now resolve at the root domain
-- Auto mode generates `.htaccess` with rewrite rules for short URL resolution
-- JSON-LD, canonical, and Open Graph URLs use the root domain (without subdirectory)
-- Link URLs displayed in admin and frontend strip the YOURLS subdirectory
-
-### 1.0
-
-- Initial release
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ## License
 

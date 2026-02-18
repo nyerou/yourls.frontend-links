@@ -3,7 +3,7 @@
 Plugin Name: Frontend Links
 Plugin URI: https://github.com/nyerou/yourls.frontend-links
 Description: Customizable link page with section, link, and profile management from the YOURLS admin.
-Version: 1.2
+Version: 1.3
 Author: Nyerou
 Author URI: https://nyerou.link
 */
@@ -32,19 +32,18 @@ Author URI: https://nyerou.link
  *     icons.php             ← Font Awesome + custom icon system
  *     install.php           ← Database table creation
  *     render.php            ← Homepage rendering logic
+ *     themes.php            ← Theme resolution and discovery
  *   templates/
- *     home.php              ← Homepage (link-in-bio page)
  *     admin.php             ← Admin panel interface
- *     redirect.php          ← Mini redirect interstitial
- *     404.php               ← Branded 404 error page
  *   assets/
  *     css/admin.css         ← Admin panel styles
- *     css/pages.css         ← Redirect + 404 page styles
- *     css/my.css            ← Homepage styles (compiled Tailwind)
  *     css/all.min.css       ← Font Awesome (vendor)
  *     js/admin.js           ← Admin panel logic (CSP-compliant)
- *     js/redirect.js        ← Redirect delay script
- *     js/app.js             ← Homepage particle system
+ *     js/redirect.js        ← Redirect delay script (shared)
+ *     js/stats-rewrite.js   ← Admin stats fix
+ *   themes/
+ *     default/              ← Minimal default theme
+ *     nyerou-original/      ← Original dark theme with particles
  *
  * @package FrontendLinks
  * @author  Nyerou
@@ -55,9 +54,13 @@ Author URI: https://nyerou.link
 if (!defined('YOURLS_ABSPATH')) die();
 
 // ─── Plugin constants ───────────────────────────────────────
+define('FL_VERSION',    '1.3');
 define('FL_PLUGIN_DIR', __DIR__);
 define('FL_PLUGIN_SLUG', basename(__DIR__));
 define('FL_TABLE_PREFIX', 'frontend_');
+
+// Themes directory (user/plugins/frontend-links/themes/)
+define('FL_THEMES_DIR', FL_PLUGIN_DIR . '/themes');
 
 // Uploads directory (user/plugins/frontend-links/uploads/)
 define('FL_UPLOADS_DIR', FL_PLUGIN_DIR . '/uploads');
@@ -73,6 +76,7 @@ define('FL_AJAX_URL', yourls_plugin_url(FL_PLUGIN_DIR) . '/ajax.php');
 // ─── Load dependencies ──────────────────────────────────────
 require_once FL_PLUGIN_DIR . '/includes/functions.php';
 require_once FL_PLUGIN_DIR . '/includes/icons.php';
+require_once FL_PLUGIN_DIR . '/includes/themes.php';
 require_once FL_PLUGIN_DIR . '/includes/render.php';
 
 // ─── Load textdomain for i18n ──────────────────────────────
@@ -100,6 +104,7 @@ function fl_on_activate() {
     if (!is_dir(FL_ICONS_DIR)) {
         mkdir(FL_ICONS_DIR, 0755, true);
     }
+    fl_write_uploads_htaccess();
 
     // If auto mode was previously set, recreate the index.php files
     if (yourls_get_option('fl_display_mode') === 'auto') {
