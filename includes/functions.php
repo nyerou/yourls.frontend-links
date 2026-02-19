@@ -35,6 +35,21 @@ function fl_escape(string $str): string {
 }
 
 /**
+ * Check whether the HTTP referrer is our frontend links homepage.
+ *
+ * Compares the referrer's host against the root URL (scheme + host,
+ * without the YOURLS subdirectory) and verifies the path is "/".
+ * Used to set the referrer to the homepage URL in YOURLS click logs.
+ */
+function fl_referrer_is_homepage(): bool {
+    if (empty($_SERVER['HTTP_REFERER'])) return false;
+    $ref  = parse_url($_SERVER['HTTP_REFERER']);
+    $root = parse_url(fl_get_root_url());
+    return ($ref['host'] ?? '') === ($root['host'] ?? '')
+        && rtrim($ref['path'] ?? '/', '/') === '';
+}
+
+/**
  * Extract the path from YOURLS_SITE
  * E.g.: "https://example.com/yourls" → "/yourls"
  * E.g.: "https://example.com" → ""
@@ -557,10 +572,16 @@ function fl_serve_short_url(string $request): void {
         exit;
     }
 
-    // Log the click
-    if (function_exists('yourls_log_redirect')) {
-        yourls_log_redirect($keyword);
+    // Normalize referrer to the canonical homepage URL if click came from our page.
+    // Avoids raw domain variants (with/without trailing slash, http vs https)
+    // and ensures YOURLS stats show a valid clickable URL.
+    if (fl_referrer_is_homepage()) {
+        $_SERVER['HTTP_REFERER'] = fl_get_root_url() . '/?ref=fl-homepage';
     }
+
+    // Count and log the click (mirrors what yourls_redirect_shorturl() does)
+    yourls_update_clicks($keyword);
+    yourls_log_redirect($keyword);
 
     fl_serve_redirect_page($keyword, $url);
     exit;

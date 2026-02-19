@@ -3,7 +3,7 @@
 Plugin Name: Frontend Links
 Plugin URI: https://github.com/nyerou/yourls.frontend-links
 Description: Customizable link page with section, link, and profile management from the YOURLS admin.
-Version: 1.3
+Version: 1.4
 Author: Nyerou
 Author URI: https://nyerou.link
 */
@@ -54,7 +54,7 @@ Author URI: https://nyerou.link
 if (!defined('YOURLS_ABSPATH')) die();
 
 // ─── Plugin constants ───────────────────────────────────────
-define('FL_VERSION',    '1.3');
+define('FL_VERSION',    '1.4');
 define('FL_PLUGIN_DIR', __DIR__);
 define('FL_PLUGIN_SLUG', basename(__DIR__));
 define('FL_TABLE_PREFIX', 'frontend_');
@@ -129,24 +129,59 @@ function fl_serve_homepage($args) {
 }
 
 // ─── Intercept short URL redirects → mini redirect page ─────
-// Uses the redirect_shorturl action which fires ONLY for short URL
-// redirects (not admin redirects). Serves a branded HTML page with
-// OG metadata before redirecting.
+// Strategy: two hooks working together so YOURLS counts the click naturally.
+//
+//   1. redirect_shorturl  → capture keyword + url (no exit).
+//      YOURLS then calls yourls_update_clicks() and yourls_log_redirect()
+//      on its own before calling yourls_redirect().
+//   2. pre_redirect       → fires inside yourls_redirect(), just before the
+//      HTTP Location header. We serve the branded page here and exit,
+//      so the header is never sent.
+//
+// pre_redirect does not receive $keyword, so we pass it via a module-level
+// variable set in step 1.
+$fl_pending_redirect = null;
+
 if (yourls_get_option('fl_display_mode') === 'auto') {
-    yourls_add_action('redirect_shorturl', 'fl_intercept_shorturl_redirect');
+    yourls_add_action('redirect_shorturl', 'fl_capture_shorturl_redirect');
+    yourls_add_action('pre_redirect',      'fl_intercept_pre_redirect');
 }
 
-function fl_intercept_shorturl_redirect($args) {
-    $url = $args[0] ?? '';
+function fl_capture_shorturl_redirect($args) {
+    global $fl_pending_redirect;
+
+    $url     = $args[0] ?? '';
     $keyword = $args[1] ?? '';
     if (empty($url) || empty($keyword)) return;
 
     // Don't intercept admin context
     if (defined('YOURLS_ADMIN')) return;
 
-    // Let YOURLS do its native redirect if branded redirect page is disabled
+    // If branded redirect page is disabled, nothing to intercept
     if (yourls_get_option('fl_disable_redirect_page') === '1') return;
 
+    // Normalize referrer to the canonical homepage URL if click came from our page,
+    // before YOURLS calls yourls_log_redirect() between our two hooks.
+    if (fl_referrer_is_homepage()) {
+        $_SERVER['HTTP_REFERER'] = fl_get_root_url() . '/?ref=fl-homepage';
+    }
+
+    // Store for fl_intercept_pre_redirect(); YOURLS will count the click
+    // between this hook and pre_redirect.
+    $fl_pending_redirect = ['keyword' => $keyword, 'url' => $url];
+}
+
+function fl_intercept_pre_redirect() {
+    global $fl_pending_redirect;
+
+    if ($fl_pending_redirect === null) return; // not a short-URL redirect
+
+    $keyword = $fl_pending_redirect['keyword'];
+    $url     = $fl_pending_redirect['url'];
+    $fl_pending_redirect = null;
+
+    // At this point YOURLS has already run yourls_update_clicks() and
+    // yourls_log_redirect(). We just need to serve the branded page.
     fl_serve_redirect_page($keyword, $url);
     exit;
 }

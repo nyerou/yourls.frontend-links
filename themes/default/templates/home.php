@@ -91,7 +91,7 @@ if (!defined('YOURLS_ABSPATH')) die();
                     <?php foreach ($sectionLinks as $link): ?>
                     <a href="<?= $e(fl_strip_base_path($link['url'])) ?>"
                        target="_blank"
-                       rel="noopener noreferrer"
+                       rel="noopener"
                        class="fl-link">
                         <span class="fl-link-icon"><?= fl_get_icon($link['icon']) ?></span>
                         <span class="fl-link-label"><?= $e($link['label']) ?></span>

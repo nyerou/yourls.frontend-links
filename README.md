@@ -19,6 +19,7 @@ Link-in-bio page plugin for YOURLS — manage sections, links, profile and custo
   - Stats links (`keyword+`) are corrected to include the subdirectory
   - Auto-generated `.htaccess` handles URL rewriting
   - JSON-LD and meta tags use the root domain
+- **Click tracking**: short URL clicks are correctly counted in YOURLS stats; clicks from the link-in-bio page are identified as `?ref=fl-homepage` in Traffic Sources
 - **CSP compliant**: no inline scripts or styles, compatible with YOURLS 1.10+ strict Content Security Policy
 - **Security**: SVG sanitization (XSS prevention), SSRF protection on URL fetching, uploads directory lockdown
 - **i18n ready** with French translation included

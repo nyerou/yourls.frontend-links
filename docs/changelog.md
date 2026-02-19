@@ -2,6 +2,17 @@
 
 All notable changes to Frontend Links are documented here.
 
+## [1.4] - 2026-02-19
+
+### Added
+
+- **Referrer tracking**: links on the home page now send the HTTP referrer (removed `noreferrer` from `rel`). Clicks originating from the link-in-bio page are logged with `?ref=fl-homepage` appended to the root URL, making them identifiable in YOURLS Traffic Sources. Clicks from other sources keep their original referrer unchanged.
+
+### Fixed
+
+- **Click counting broken**: the `redirect_shorturl` hook exited before YOURLS could call `yourls_update_clicks()` and `yourls_log_redirect()`, so no click was ever recorded since the plugin was installed. Replaced the single hook with a two-hook strategy: `redirect_shorturl` captures keyword and URL without exiting (letting YOURLS count the click naturally), then `pre_redirect` serves the branded page just before the HTTP `Location` header is sent.
+- **Click counter not incremented** in `fl_serve_short_url()` (generated `index.php` path): `yourls_log_redirect()` was called (log table) but `yourls_update_clicks()` was missing (click counter column), so the counter stayed at 0.
+
 ## [1.3] - 2026-02-18
 
 ### Added
