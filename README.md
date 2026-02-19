@@ -27,27 +27,27 @@ Link-in-bio page plugin for YOURLS — manage sections, links, profile and custo
 
 <details>
 <summary>Sections & Links management</summary>
-<img src="screens/links-sections-demo-add_edit_delete.gif" width="600" alt="Sections and links CRUD">
+<img src="docs/screens/links-sections-demo-add_edit_delete.gif" width="600" alt="Sections and links CRUD">
 </details>
 
 <details>
 <summary>Profile & Avatar</summary>
-<img src="screens/profile-avatars-demo.gif" width="600" alt="Profile and avatar management">
+<img src="docs/screens/profile-avatars-demo.gif" width="600" alt="Profile and avatar management">
 </details>
 
 <details>
 <summary>Custom icons</summary>
-<img src="screens/add-icons-demo.png" width="600" alt="Adding custom icons">
+<img src="docs/screens/add-icons-demo.png" width="600" alt="Adding custom icons">
 </details>
 
 <details>
 <summary>Settings & Feature toggles</summary>
-<img src="screens/settings-infos-demo.png" width="600" alt="Options panel and feature toggles">
+<img src="docs/screens/settings-infos-demo.png" width="600" alt="Options panel and feature toggles">
 </details>
 
 <details>
 <summary>Social preview (Discord)</summary>
-<img src="screens/meta-seo-demo-discord.png" width="400" alt="Discord embed with OG metadata">
+<img src="docs/screens/meta-seo-demo-discord.png" width="400" alt="Discord embed with OG metadata">
 </details>
 
 ## Requirements
@@ -84,12 +84,9 @@ fl_render_page();
 
 Themes live in `themes/<slug>/` and contain a `theme.json` manifest, a `templates/` folder (`home.php`, `redirect.php`, `404.php`) and an `assets/` folder. The active theme is selected from **Options → Theme** in the admin panel.
 
-Bundled themes:
+The `default` theme (minimal, responsive, system light/dark mode) is active out of the box. Additional themes can be added by dropping a folder in `themes/`.
 
-| Slug              | Description                                              |
-| ----------------- | -------------------------------------------------------- |
-| `default`         | Minimal, responsive. Adapts to system light/dark mode.   |
-| `nyerou-original` | Dark glassmorphism design with animated particle system. |
+See **[docs/theming.md](docs/theming.md)** for a full guide on creating your own theme.
 
 ### Features
 
@@ -149,18 +146,7 @@ frontend-links/
 │   │   └── assets/css/
 │   │       ├── home.css
 │   │       └── pages.css
-│   └── nyerou-original/    # Dark glassmorphism theme with particles
-│       ├── theme.json
-│       ├── templates/
-│       │   ├── home.php
-│       │   ├── redirect.php
-│       │   └── 404.php
-│       └── assets/
-│           ├── css/
-│           │   ├── home.css
-│           │   └── pages.css
-│           └── js/
-│               └── app.js
+│   └── <your-theme>/       # Additional themes follow the same structure
 ├── uploads/                # Avatars & custom icon images (gitignored)
 │   └── icons/
 └── languages/              # Translation files (.pot, .po)
@@ -177,7 +163,7 @@ frontend-links/
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for the full version history.
+See [CHANGELOG.md](docs/changelog.md) for the full version history.
 
 ## License
 
