@@ -12,7 +12,9 @@ Link-in-bio page plugin for YOURLS — manage sections, links, profile and custo
 - **Social previews**: redirect page fetches `og:image`, `og:type`, `og:description`, `theme-color` and `<title>` from the target URL for accurate social link previews (Discord, Slack, Twitter, Facebook)
 - **Branded redirect page**: interstitial with target page metadata before redirecting (can be disabled)
 - **Branded 404 page**: custom error page matching your site design (can be disabled)
-- **Auto mode**: generates `index.php` and `.htaccess` at the document root, no manual setup needed
+- **Auto mode**: generates `index.php`, `.htaccess` and `robots.txt` at the document root, no manual setup needed
+- **robots.txt generation**: auto-generated in auto mode — lists all YOURLS short URLs with destination comments, configurable `Allow`/`Disallow` per install, timestamped, auto-updates on link changes
+- **Redirect rules**: optional HTTP→HTTPS and www canonical redirects injected into the generated `.htaccess`; direction auto-detected from `YOURLS_SITE`; both combined into a single 301 when active together
 - **Manual mode**: include `fl_render_page()` from any PHP file
 - **Subdirectory support**: works when YOURLS is installed in a subdirectory (e.g. `example.com/yourls`)
   - Short URLs resolve at the root (`/keyword` not `/yourls/keyword`)
@@ -89,6 +91,26 @@ The `default` theme (minimal, responsive, system light/dark mode) is active out 
 
 See **[docs/theming.md](docs/theming.md)** for a full guide on creating your own theme.
 
+### robots.txt
+
+In auto mode the plugin generates a `robots.txt` at the document root. The file lists every YOURLS short URL and is automatically re-written whenever a short URL is created, edited or deleted (file is only touched when content actually changes).
+
+The **Short URLs indexing** option (admin → Options → robots.txt) controls the directive used for each short URL:
+
+| Value | Directive | Effect |
+|---|---|---|
+| **Disallow** *(default)* | `Disallow: /keyword` | Google skips the redirect page and indexes the destination directly — saves crawl budget |
+| **Allow** | `Allow: /keyword` | Googlebot crawls the branded redirect page before following to the destination |
+
+### Redirections
+
+Optional redirect rules injected into the generated `.htaccess` (auto mode, Apache with `mod_rewrite` only). Applied immediately when saved.
+
+| Option | Description |
+|---|---|
+| **HTTP → HTTPS** | Forces all `http://` requests to `https://` (301). Skip if your server or CDN already handles this. |
+| **WWW canonical** | Redirects the alternate www variant to the canonical domain. Direction is auto-detected from `YOURLS_SITE`: a non-www site redirects `www.example.com → example.com`, a www site redirects `example.com → www.example.com`. The redirect target always uses the scheme from `YOURLS_SITE`. When combined with HTTPS, both are resolved in a single 301. |
+
 ### Features
 
 | Option                    | Description                                                                                                                                                                                               |
@@ -121,6 +143,7 @@ An option allows including the YOURLS subdirectory in generated URLs if needed.
 frontend-links/
 ├── plugin.php              # Plugin entry point, hooks and filters
 ├── ajax.php                # AJAX endpoint for admin CRUD
+├── migrate.php             # One-time interactive migration (fl_* options → frontend_settings)
 ├── includes/
 │   ├── functions.php       # Core logic (CRUD, URL helpers, file management)
 │   ├── icons.php           # Font Awesome + custom icon system

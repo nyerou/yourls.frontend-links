@@ -87,10 +87,10 @@ $availableIcons = fl_get_available_icons();
 $customIcons = fl_get_custom_icons();
 $activeTheme = fl_get_active_theme();
 $availableThemes = fl_get_available_themes();
-$displayMode = yourls_get_option('fl_display_mode', 'manual');
-$shorturlIncludePath = yourls_get_option('fl_shorturl_include_path', '0');
-$disableRedirectPage = yourls_get_option('fl_disable_redirect_page', '0');
-$disable404Page = yourls_get_option('fl_disable_404_page', '0');
+$displayMode = fl_get_setting('display_mode', 'manual');
+$shorturlIncludePath = fl_get_setting('shorturl_include_path', '0');
+$disableRedirectPage = fl_get_setting('disable_redirect_page', '0');
+$disable404Page = fl_get_setting('disable_404_page', '0');
 $nonce = yourls_create_nonce('frontend_links');
 $currentAvatar = $settings['profile_avatar'] ?? '';
 $previousAvatarFile = fl_find_avatar_file('fl_avatars_previous');
@@ -404,6 +404,80 @@ fl_render_page();</pre>
         <p><input type="submit" class="button button-primary" value="<?= fl_escape(yourls__('Save mode', 'frontend-links')) ?>"></p>
     </form>
 
+    <?php if ($displayMode === 'auto'): ?>
+    <h3 style="margin-top:20px;"><?php yourls_e('robots.txt', 'frontend-links'); ?></h3>
+    <?php $robotsTxtPath = fl_get_setting('robots_txt_path', ''); ?>
+    <?php if ($robotsTxtPath && file_exists($robotsTxtPath)): ?>
+    <p><span style="color:#2e7d32;font-weight:600;">&#10003; <?php yourls_e('Active', 'frontend-links'); ?></span> &mdash; <code><?= fl_escape($robotsTxtPath) ?></code></p>
+    <?php else: ?>
+    <p><span style="color:#b71c1c;font-weight:600;">&#10007; <?php yourls_e('Not generated yet', 'frontend-links'); ?></span></p>
+    <?php endif; ?>
+    <?php $robotsShorturlIndex = fl_get_setting('robots_shorturl_index', 'disallow'); ?>
+    <form id="fl-form-robots-shorturl" data-fl-submit="ajax" style="margin-top:8px;">
+        <input type="hidden" name="fl_action" value="update_robots_shorturl_index">
+        <input type="hidden" name="nonce" value="<?= fl_escape($nonce) ?>">
+        <table class="form-table">
+            <tr>
+                <th><label><?php yourls_e('Short URLs indexing', 'frontend-links'); ?></label></th>
+                <td>
+                    <p>
+                        <label><input type="radio" name="robots_shorturl_index" value="disallow" <?= $robotsShorturlIndex !== 'allow' ? 'checked' : '' ?>>
+                        <strong>Disallow</strong> &mdash; <?php yourls_e('Saves crawl budget; Google indexes the destination directly.', 'frontend-links'); ?></label>
+                    </p>
+                    <p>
+                        <label><input type="radio" name="robots_shorturl_index" value="allow" <?= $robotsShorturlIndex === 'allow' ? 'checked' : '' ?>>
+                        <strong>Allow</strong> &mdash; <?php yourls_e('Googlebot crawls the branded redirect page before following to the destination.', 'frontend-links'); ?></label>
+                    </p>
+                </td>
+            </tr>
+        </table>
+        <p><input type="submit" class="button button-primary" value="<?= fl_escape(yourls__('Save & regenerate', 'frontend-links')) ?>"></p>
+    </form>
+
+    <h3 style="margin-top:20px;"><?php yourls_e('Redirections', 'frontend-links'); ?></h3>
+    <p><?php yourls_e('Redirect rules injected into the generated <code>.htaccess</code>. Applied immediately on save. Only effective on Apache servers with <code>mod_rewrite</code>.', 'frontend-links'); ?></p>
+    <?php
+    $redirectHttps = fl_get_setting('redirect_https', '0');
+    $redirectWww   = fl_get_setting('redirect_www', '0');
+    ?>
+    <form id="fl-form-redirects" data-fl-submit="ajax">
+        <input type="hidden" name="fl_action" value="update_redirect_options">
+        <input type="hidden" name="nonce" value="<?= fl_escape($nonce) ?>">
+        <table class="form-table">
+            <tr>
+                <th><label><?php yourls_e('HTTPS', 'frontend-links'); ?></label></th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="redirect_https" <?= $redirectHttps === '1' ? 'checked' : '' ?>>
+                        <?php yourls_e('Force HTTP → HTTPS (301)', 'frontend-links'); ?>
+                    </label>
+                    <br><span style="color:#666;font-size:11px;"><?php yourls_e('Skip if your server or CDN already handles HTTPS redirection.', 'frontend-links'); ?></span>
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php yourls_e('WWW canonical', 'frontend-links'); ?></label></th>
+                <td>
+                    <?php
+                    $rootHost  = parse_url(fl_get_root_url(), PHP_URL_HOST);
+                    $isWwwSite = str_starts_with($rootHost, 'www.');
+                    $altHost   = $isWwwSite ? substr($rootHost, 4) : 'www.' . $rootHost;
+                    ?>
+                    <label>
+                        <input type="checkbox" name="redirect_www" <?= $redirectWww === '1' ? 'checked' : '' ?>>
+                        <?php yourls_e('Redirect alternate variant to canonical domain', 'frontend-links'); ?>
+                    </label>
+                    <br><span style="color:#666;font-size:11px;">
+                        <code><?= fl_escape($altHost) ?></code> &rarr; <code><?= fl_escape($rootHost) ?></code>
+                        &nbsp;&mdash;&nbsp;<?php yourls_e('direction auto-detected from YOURLS_SITE.', 'frontend-links'); ?>
+                    </span>
+                    <br><span style="color:#666;font-size:11px;"><?php yourls_e('When combined with HTTPS, both are resolved in a single 301.', 'frontend-links'); ?></span>
+                </td>
+            </tr>
+        </table>
+        <p><input type="submit" class="button button-primary" value="<?= fl_escape(yourls__('Save & apply', 'frontend-links')) ?>"></p>
+    </form>
+    <?php endif; ?>
+
     <h3 style="margin-top:20px;"><?php yourls_e('Short links', 'frontend-links'); ?></h3>
     <p><?php yourls_e('When a link is entered without a protocol (e.g.: <code>git</code>), the YOURLS domain is added automatically.', 'frontend-links'); ?></p>
     <form id="fl-form-shorturl" data-fl-submit="ajax">
@@ -484,9 +558,13 @@ fl_render_page();</pre>
         <tr><th><?php yourls_e('Detected path', 'frontend-links'); ?></th><td><code><?= fl_escape($yourlsBasePath ?: yourls__('(root)', 'frontend-links')) ?></code></td></tr>
         <tr><th><?php yourls_e('Uploads folder', 'frontend-links'); ?></th><td><code>user/plugins/<?= fl_escape(FL_PLUGIN_SLUG) ?>/uploads/</code></td></tr>
         <tr><th><?php yourls_e('Current mode', 'frontend-links'); ?></th><td><strong><?= $displayMode === 'auto' ? yourls__('Automatic (/)', 'frontend-links') : yourls__('Manual', 'frontend-links') ?></strong></td></tr>
-        <?php $homepageFilePath = yourls_get_option('fl_homepage_file_path', ''); ?>
+        <?php $homepageFilePath = fl_get_setting('homepage_file_path', ''); ?>
         <?php if ($homepageFilePath): ?>
         <tr><th><?php yourls_e('Auto index.php file', 'frontend-links'); ?></th><td><code><?= fl_escape($homepageFilePath) ?></code></td></tr>
+        <?php endif; ?>
+        <?php $infoRobotsTxtPath = fl_get_setting('robots_txt_path', ''); ?>
+        <?php if ($infoRobotsTxtPath): ?>
+        <tr><th><?php yourls_e('robots.txt file', 'frontend-links'); ?></th><td><code><?= fl_escape($infoRobotsTxtPath) ?></code></td></tr>
         <?php endif; ?>
         <tr><th><?php yourls_e('PHP version', 'frontend-links'); ?></th><td><code><?= fl_escape(PHP_VERSION) ?></code></td></tr>
         <tr>

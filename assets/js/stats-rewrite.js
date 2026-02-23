@@ -31,7 +31,7 @@
     if (!script) return;
 
     var basePath = script.getAttribute('data-base-path') || '';
-    var rootUrl  = script.getAttribute('data-root-url')  || '';
+    var rootUrl = script.getAttribute('data-root-url') || '';
 
     // Only fix if there is a subdirectory
     if (!basePath || !rootUrl) return;
@@ -50,7 +50,7 @@
         // Only fix links on our own domain
         if (m[1] !== rootUrl) return;
 
-        var keyword   = m[2];
+        var keyword = m[2];
         var allSuffix = m[3] || '';
 
         // Add the YOURLS subdirectory back

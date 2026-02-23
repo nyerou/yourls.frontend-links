@@ -146,13 +146,13 @@ switch ($action) {
 
     case 'update_display_mode':
         $mode = in_array($_POST['display_mode'], ['manual', 'auto']) ? $_POST['display_mode'] : 'manual';
-        yourls_update_option('fl_display_mode', $mode);
+        fl_update_setting('display_mode', $mode);
         if ($mode === 'auto') {
             $fileResult = fl_create_homepage_file();
             if ($fileResult['success']) {
                 $resp = ['success' => true, 'message' => yourls__('Automatic mode enabled.', 'frontend-links') . ' ' . $fileResult['message']];
             } else {
-                yourls_update_option('fl_display_mode', 'manual');
+                fl_update_setting('display_mode', 'manual');
                 $resp = ['success' => false, 'message' => $fileResult['message']];
             }
         } else {
@@ -163,7 +163,7 @@ switch ($action) {
 
     case 'update_shorturl_option':
         $includePath = isset($_POST['shorturl_include_path']) ? '1' : '0';
-        yourls_update_option('fl_shorturl_include_path', $includePath);
+        fl_update_setting('shorturl_include_path', $includePath);
         $resp = ['success' => true, 'message' => yourls__('Option updated.', 'frontend-links')];
         break;
 
@@ -171,18 +171,47 @@ switch ($action) {
         $theme = preg_replace('/[^a-z0-9_-]/', '', strtolower(trim($_POST['theme'] ?? '')));
         $themes = fl_get_available_themes();
         if ($theme !== '' && isset($themes[$theme])) {
-            yourls_update_option('fl_active_theme', $theme);
+            fl_update_setting('active_theme', $theme);
             $resp = ['success' => true, 'message' => sprintf(yourls__('Theme changed to "%s".', 'frontend-links'), $themes[$theme]['name'] ?? $theme)];
         } else {
             $resp = ['success' => false, 'message' => yourls__('Invalid theme.', 'frontend-links')];
         }
         break;
 
+    case 'regenerate_robots_txt':
+        $resp = fl_write_robots_txt();
+        break;
+
+    case 'update_redirect_options':
+        $https = isset($_POST['redirect_https']) ? '1' : '0';
+        $www   = isset($_POST['redirect_www'])   ? '1' : '0';
+        fl_update_setting('redirect_https', $https);
+        fl_update_setting('redirect_www', $www);
+        $homepagePath = fl_get_setting('homepage_file_path', '');
+        if (!empty($homepagePath)) {
+            $result = fl_create_root_htaccess(dirname($homepagePath), fl_get_yourls_base_path());
+            $resp = $result['success']
+                ? ['success' => true, 'message' => yourls__('Redirect options saved and .htaccess updated.', 'frontend-links')]
+                : $result;
+        } else {
+            $resp = ['success' => true, 'message' => yourls__('Options saved.', 'frontend-links')];
+        }
+        break;
+
+    case 'update_robots_shorturl_index':
+        $value = ($_POST['robots_shorturl_index'] ?? '') === 'allow' ? 'allow' : 'disallow';
+        fl_update_setting('robots_shorturl_index', $value);
+        $result = fl_write_robots_txt();
+        $resp = $result['success']
+            ? ['success' => true, 'message' => yourls__('Option saved and robots.txt regenerated.', 'frontend-links')]
+            : $result;
+        break;
+
     case 'update_feature_toggles':
         $disableRedirect = isset($_POST['disable_redirect_page']) ? '1' : '0';
         $disable404 = isset($_POST['disable_404_page']) ? '1' : '0';
-        yourls_update_option('fl_disable_redirect_page', $disableRedirect);
-        yourls_update_option('fl_disable_404_page', $disable404);
+        fl_update_setting('disable_redirect_page', $disableRedirect);
+        fl_update_setting('disable_404_page', $disable404);
         $resp = ['success' => true, 'message' => yourls__('Options updated.', 'frontend-links')];
         break;
 

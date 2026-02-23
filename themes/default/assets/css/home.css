@@ -8,59 +8,61 @@
 
 /* ── Color variables ───────────────────────────── */
 :root {
-    --fl-page-bg:             #fafafa;
-    --fl-card-bg:             #fff;
-    --fl-card-border:         #e5e5e5;
-    --fl-card-shadow:         rgba(0, 0, 0, 0.06);
-    --fl-text:                #1a1a1a;
-    --fl-text-muted:          #666;
-    --fl-avatar-bg:           #f0f0f0;
-    --fl-avatar-border:       #e5e5e5;
-    --fl-initials:            #888;
-    --fl-section-title:       #999;
-    --fl-link-border:         #e5e5e5;
-    --fl-link-hover-bg:       #f5f5f5;
-    --fl-link-hover-border:   #ccc;
-    --fl-icon:                #888;
-    --fl-icon-hover:          #333;
-    --fl-footer:              #aaa;
-    --fl-admin-bg:            #f0f0f0;
-    --fl-admin-border:        transparent;
-    --fl-admin-color:         #999;
-    --fl-admin-hover-bg:      #e5e5e5;
-    --fl-admin-hover-border:  transparent;
-    --fl-admin-hover-color:   #666;
+    --fl-page-bg: #fafafa;
+    --fl-card-bg: #fff;
+    --fl-card-border: #e5e5e5;
+    --fl-card-shadow: rgba(0, 0, 0, 0.06);
+    --fl-text: #1a1a1a;
+    --fl-text-muted: #666;
+    --fl-avatar-bg: #f0f0f0;
+    --fl-avatar-border: #e5e5e5;
+    --fl-initials: #888;
+    --fl-section-title: #999;
+    --fl-link-border: #e5e5e5;
+    --fl-link-hover-bg: #f5f5f5;
+    --fl-link-hover-border: #ccc;
+    --fl-icon: #888;
+    --fl-icon-hover: #333;
+    --fl-footer: #aaa;
+    --fl-admin-bg: #f0f0f0;
+    --fl-admin-border: transparent;
+    --fl-admin-color: #999;
+    --fl-admin-hover-bg: #e5e5e5;
+    --fl-admin-hover-border: transparent;
+    --fl-admin-hover-color: #666;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --fl-page-bg:             #111;
-        --fl-card-bg:             #1c1c1c;
-        --fl-card-border:         #2d2d2d;
-        --fl-card-shadow:         rgba(0, 0, 0, 0.4);
-        --fl-text:                #e8e8e8;
-        --fl-text-muted:          #999;
-        --fl-avatar-bg:           #2a2a2a;
-        --fl-avatar-border:       #383838;
-        --fl-initials:            #888;
-        --fl-section-title:       #555;
-        --fl-link-border:         #2d2d2d;
-        --fl-link-hover-bg:       #252525;
-        --fl-link-hover-border:   #404040;
-        --fl-icon:                #666;
-        --fl-icon-hover:          #bbb;
-        --fl-footer:              #555;
-        --fl-admin-bg:            #2a2a2a;
-        --fl-admin-border:        #333;
-        --fl-admin-color:         #888;
-        --fl-admin-hover-bg:      #333;
-        --fl-admin-hover-border:  #444;
-        --fl-admin-hover-color:   #bbb;
+        --fl-page-bg: #111;
+        --fl-card-bg: #1c1c1c;
+        --fl-card-border: #2d2d2d;
+        --fl-card-shadow: rgba(0, 0, 0, 0.4);
+        --fl-text: #e8e8e8;
+        --fl-text-muted: #999;
+        --fl-avatar-bg: #2a2a2a;
+        --fl-avatar-border: #383838;
+        --fl-initials: #888;
+        --fl-section-title: #555;
+        --fl-link-border: #2d2d2d;
+        --fl-link-hover-bg: #252525;
+        --fl-link-hover-border: #404040;
+        --fl-icon: #666;
+        --fl-icon-hover: #bbb;
+        --fl-footer: #555;
+        --fl-admin-bg: #2a2a2a;
+        --fl-admin-border: #333;
+        --fl-admin-color: #888;
+        --fl-admin-hover-bg: #333;
+        --fl-admin-hover-border: #444;
+        --fl-admin-hover-color: #bbb;
     }
 }
 
 /* ── Reset ─────────────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;

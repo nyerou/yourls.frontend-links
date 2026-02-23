@@ -2,6 +2,39 @@
 
 All notable changes to Frontend Links are documented here.
 
+## [1.6] - 2026-02-23
+
+### Added
+
+- **Interactive settings migration** (`migrate.php`): upgrading from v1.5 or earlier is detected automatically. Authenticated admin users are redirected to a dedicated migration page that explains the storage change, lists the legacy `fl_*` options found in `yourls_options`, and offers two actions: move the settings to `frontend_settings` and continue, or decline and deactivate the plugin.
+- **Settings cache**: all plugin settings are loaded from `frontend_settings` in a single query per request and cached in memory. Subsequent reads within the same request skip the database entirely. Cache is invalidated on write and refreshed after table installation.
+
+### Changed
+
+- **Settings storage**: all plugin configuration (`display_mode`, `active_theme`, `redirect_https`, `robots_txt_path`, etc.) is now stored exclusively in the `frontend_settings` table. Previously these values lived in `yourls_options` (the table shared with YOURLS core and other plugins), which caused naming conflicts and required a separate query per setting per page load.
+
+### Fixed
+
+- **Redirect loop** when a non-authenticated user visits the YOURLS admin while legacy `fl_*` options are present: the migration guard now skips unauthenticated requests instead of redirecting them to `migrate.php` (which would redirect back to `index.php` → infinite loop).
+- **Login broken** after the auth guard was introduced: calling `yourls_is_valid_user()` on a `POST` login request during `plugins_loaded` consumed the form nonce before YOURLS's own auth handling ran, causing "Unauthorized action or expired link". The guard now exits immediately on `POST` requests so the login flow is never interrupted.
+
+## [1.5] - 2026-02-23
+
+### Added
+
+- **robots.txt auto-generation** (auto mode only): the plugin creates a `robots.txt` at the document root alongside `index.php` and `.htaccess`. The file is deleted automatically when auto mode is disabled.
+  - Lists every YOURLS short URL with a `# → destination` comment and an `Allow` or `Disallow` directive (configurable per-install).
+  - Includes a `# Last updated: YYYY-MM-DD HH:MM:SS UTC` timestamp on every write.
+  - Auto-regenerates on YOURLS link events (`add_new_link`, `delete_link`, `edit_link`); the file is only rewritten when content actually changes.
+  - Conflict-safe: refuses to overwrite an existing `robots.txt` not created by this plugin (same marker-based strategy as `index.php`).
+  - Path stored in `fl_robots_txt_path` YOURLS option for safe cleanup.
+- **robots.txt admin UI**: status indicator (active path / not generated), Allow/Disallow toggle for short URL indexing with "Save & regenerate" button. Section visible only in auto mode.
+- **Redirect rules in `.htaccess`** (auto mode, Apache only): optional redirect rules injected at the top of the generated `.htaccess` block, applied immediately on save.
+  - **HTTP → HTTPS**: `RewriteCond %{HTTPS} off` → `https://%{HTTP_HOST}%{REQUEST_URI}` (301).
+  - **WWW canonical**: direction auto-detected from `YOURLS_SITE` (www site → redirect non-www → www, non-www site → redirect www → non-www). Redirect target always uses the scheme from `YOURLS_SITE`, so `http://www.example.com` is correctly redirected to `https://example.com` without a double hop.
+  - **Combined rule**: when both HTTPS and WWW are active, a single `301` handles all variants (e.g. `http://www.example.com` → `https://example.com` in one redirect).
+  - Admin UI: HTTPS checkbox + WWW checkbox with canonical direction shown inline (`www.nyerou.link → nyerou.link — auto-detected from YOURLS_SITE`).
+
 ## [1.4] - 2026-02-19
 
 ### Added

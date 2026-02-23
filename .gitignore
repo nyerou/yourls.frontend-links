@@ -8,3 +8,4 @@ nul
 /uploads/
 push.md
 /themes/nyerou-original
+*.code-workspace

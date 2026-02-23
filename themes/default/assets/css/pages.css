@@ -7,55 +7,57 @@
 
 /* ── Color variables ───────────────────────────── */
 :root {
-    --fl-page-bg:         #fafafa;
-    --fl-card-bg:         #fff;
-    --fl-card-border:     #e5e5e5;
-    --fl-card-shadow:     rgba(0, 0, 0, 0.06);
-    --fl-text:            #1a1a1a;
-    --fl-text-muted:      #999;
-    --fl-text-subtle:     #bbb;
-    --fl-link:            #666;
-    --fl-link-hover:      #1a1a1a;
-    --fl-arrow:           #ccc;
-    --fl-spinner-track:   #e5e5e5;
-    --fl-spinner-head:    #888;
-    --fl-code:            #ccc;
-    --fl-message:         #888;
-    --fl-path:            #bbb;
-    --fl-btn-bg:          #f0f0f0;
-    --fl-btn-border:      #ddd;
-    --fl-btn-color:       #555;
-    --fl-btn-hover-bg:    #e5e5e5;
-    --fl-btn-hover-border:#ccc;
+    --fl-page-bg: #fafafa;
+    --fl-card-bg: #fff;
+    --fl-card-border: #e5e5e5;
+    --fl-card-shadow: rgba(0, 0, 0, 0.06);
+    --fl-text: #1a1a1a;
+    --fl-text-muted: #999;
+    --fl-text-subtle: #bbb;
+    --fl-link: #666;
+    --fl-link-hover: #1a1a1a;
+    --fl-arrow: #ccc;
+    --fl-spinner-track: #e5e5e5;
+    --fl-spinner-head: #888;
+    --fl-code: #ccc;
+    --fl-message: #888;
+    --fl-path: #bbb;
+    --fl-btn-bg: #f0f0f0;
+    --fl-btn-border: #ddd;
+    --fl-btn-color: #555;
+    --fl-btn-hover-bg: #e5e5e5;
+    --fl-btn-hover-border: #ccc;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --fl-page-bg:         #111;
-        --fl-card-bg:         #1c1c1c;
-        --fl-card-border:     #2d2d2d;
-        --fl-card-shadow:     rgba(0, 0, 0, 0.4);
-        --fl-text:            #e8e8e8;
-        --fl-text-muted:      #666;
-        --fl-text-subtle:     #555;
-        --fl-link:            #888;
-        --fl-link-hover:      #e8e8e8;
-        --fl-arrow:           #444;
-        --fl-spinner-track:   #333;
-        --fl-spinner-head:    #999;
-        --fl-code:            #333;
-        --fl-message:         #777;
-        --fl-path:            #555;
-        --fl-btn-bg:          #222;
-        --fl-btn-border:      #333;
-        --fl-btn-color:       #aaa;
-        --fl-btn-hover-bg:    #2d2d2d;
-        --fl-btn-hover-border:#444;
+        --fl-page-bg: #111;
+        --fl-card-bg: #1c1c1c;
+        --fl-card-border: #2d2d2d;
+        --fl-card-shadow: rgba(0, 0, 0, 0.4);
+        --fl-text: #e8e8e8;
+        --fl-text-muted: #666;
+        --fl-text-subtle: #555;
+        --fl-link: #888;
+        --fl-link-hover: #e8e8e8;
+        --fl-arrow: #444;
+        --fl-spinner-track: #333;
+        --fl-spinner-head: #999;
+        --fl-code: #333;
+        --fl-message: #777;
+        --fl-path: #555;
+        --fl-btn-bg: #222;
+        --fl-btn-border: #333;
+        --fl-btn-color: #aaa;
+        --fl-btn-hover-bg: #2d2d2d;
+        --fl-btn-hover-border: #444;
     }
 }
 
 /* ── Reset ─────────────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -86,8 +88,15 @@ body {
 }
 
 @keyframes fl-fade-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ── Redirect page ─────────────────────────────── */
@@ -145,7 +154,9 @@ body {
 }
 
 @keyframes fl-spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ── 404 page ──────────────────────────────────── */

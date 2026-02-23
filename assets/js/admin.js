@@ -25,7 +25,7 @@
  *
  * @package FrontendLinks
  */
-(function() {
+(function () {
     'use strict';
 
     // ─── Load config from JSON block ────────────────────────────
@@ -39,7 +39,7 @@
         el.textContent = msg;
         el.className = 'fl-toast ' + (isError ? 'error' : 'success') + ' show';
         clearTimeout(el._t);
-        el._t = setTimeout(function() { el.classList.remove('show'); }, 3500);
+        el._t = setTimeout(function () { el.classList.remove('show'); }, 3500);
     }
 
     // ─── Escape HTML ────────────────────────────────────────────
@@ -68,17 +68,17 @@
     }
 
     function flCloseModals() {
-        document.querySelectorAll('.fl-modal-overlay').forEach(function(m) {
+        document.querySelectorAll('.fl-modal-overlay').forEach(function (m) {
             m.style.display = 'none';
         });
     }
 
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') flCloseModals();
     });
 
-    document.querySelectorAll('.fl-modal-overlay').forEach(function(m) {
-        m.addEventListener('click', function(e) {
+    document.querySelectorAll('.fl-modal-overlay').forEach(function (m) {
+        m.addEventListener('click', function (e) {
             if (e.target === this) flCloseModals();
         });
     });
@@ -96,17 +96,17 @@
     function flAjax(formData, callback) {
         fetch(FL.ajaxUrl, {
             method: 'POST',
-            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
             body: formData
         })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            flToast(data.message, !data.success);
-            if (callback) callback(data);
-        })
-        .catch(function() {
-            flToast(FL.i18n.connectionError, true);
-        });
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                flToast(data.message, !data.success);
+                if (callback) callback(data);
+            })
+            .catch(function () {
+                flToast(FL.i18n.connectionError, true);
+            });
     }
 
     // Generic AJAX submit for option forms
@@ -116,7 +116,7 @@
 
     // ─── LINKS: Add ─────────────────────────────────────────────
     function flSubmitAddLink(form) {
-        flAjax(new FormData(form), function(resp) {
+        flAjax(new FormData(form), function (resp) {
             if (!resp.success) return;
             var link = resp.data;
             var sectionDiv = document.getElementById('fl-link-section-' + link.section_id);
@@ -167,7 +167,7 @@
             if (oldSection) oldSectionId = oldSection.dataset.sectionId;
         }
 
-        flAjax(new FormData(form), function(resp) {
+        flAjax(new FormData(form), function (resp) {
             if (!resp.success) return;
             var link = resp.data;
 
@@ -214,12 +214,12 @@
         fd.append('link_id', id);
         fd.append('section_id', sectionId);
 
-        flAjax(fd, function(resp) {
+        flAjax(fd, function (resp) {
             if (!resp.success) return;
             var row = document.querySelector('tr[data-id="' + id + '"]');
             if (row) {
                 row.classList.add('fl-fade-out');
-                setTimeout(function() {
+                setTimeout(function () {
                     row.remove();
                     flUpdateSectionCount(sectionId, -1);
                     flCheckEmptySection(sectionId);
@@ -238,9 +238,9 @@
             '<td class="fl-link-order">' + link.sort_order + '</td>' +
             '<td class="fl-link-active">' + (link.is_active == 1 ? FL.i18n.yes : '<em>' + FL.i18n.no + '</em>') + '</td>' +
             '<td class="fl-actions">' +
-                '<a href="#" data-action="edit-link">' + FL.i18n.edit + '</a>' +
-                '&nbsp;|&nbsp;' +
-                '<a href="#" data-action="delete-link" data-section-id="' + link.section_id + '" style="color:#a00;">' + FL.i18n.delete_ + '</a>' +
+            '<a href="#" data-action="edit-link">' + FL.i18n.edit + '</a>' +
+            '&nbsp;|&nbsp;' +
+            '<a href="#" data-action="delete-link" data-section-id="' + link.section_id + '" style="color:#a00;">' + FL.i18n.delete_ + '</a>' +
             '</td></tr>';
     }
 
@@ -267,7 +267,7 @@
 
     // ─── SECTIONS: Add ──────────────────────────────────────────
     function flSubmitAddSection(form) {
-        flAjax(new FormData(form), function(resp) {
+        flAjax(new FormData(form), function (resp) {
             if (!resp.success) return;
             var s = resp.data;
 
@@ -286,7 +286,7 @@
             tbody.insertAdjacentHTML('beforeend', flBuildSectionRow(s));
 
             var selects = document.querySelectorAll('select[name="section_id"]');
-            selects.forEach(function(sel) {
+            selects.forEach(function (sel) {
                 var opt = document.createElement('option');
                 opt.value = s.id;
                 opt.textContent = s.title;
@@ -328,7 +328,7 @@
     }
 
     function flSubmitEditSection(form) {
-        flAjax(new FormData(form), function(resp) {
+        flAjax(new FormData(form), function (resp) {
             if (!resp.success) return;
             var s = resp.data;
 
@@ -346,7 +346,7 @@
             var heading = document.querySelector('#fl-link-section-' + s.id + ' .fl-section-heading');
             if (heading) heading.textContent = s.title;
 
-            document.querySelectorAll('select[name="section_id"] option[value="' + s.id + '"]').forEach(function(opt) {
+            document.querySelectorAll('select[name="section_id"] option[value="' + s.id + '"]').forEach(function (opt) {
                 opt.textContent = s.title;
             });
 
@@ -362,19 +362,19 @@
         fd.append('nonce', FL.nonce);
         fd.append('section_id', id);
 
-        flAjax(fd, function(resp) {
+        flAjax(fd, function (resp) {
             if (!resp.success) return;
 
             var row = document.querySelector('#fl-sections-table tr[data-id="' + id + '"]');
             if (row) {
                 row.classList.add('fl-fade-out');
-                setTimeout(function() { row.remove(); }, 300);
+                setTimeout(function () { row.remove(); }, 300);
             }
 
             var sectionDiv = document.getElementById('fl-link-section-' + id);
             if (sectionDiv) sectionDiv.remove();
 
-            document.querySelectorAll('select[name="section_id"] option[value="' + id + '"]').forEach(function(opt) {
+            document.querySelectorAll('select[name="section_id"] option[value="' + id + '"]').forEach(function (opt) {
                 opt.remove();
             });
         });
@@ -387,9 +387,9 @@
             '<td class="fl-section-order">' + s.sort_order + '</td>' +
             '<td class="fl-section-active">' + (s.is_active == 1 ? FL.i18n.yes : '<em>' + FL.i18n.no + '</em>') + '</td>' +
             '<td class="fl-actions">' +
-                '<a href="#" data-action="edit-section">' + FL.i18n.edit + '</a>' +
-                '&nbsp;|&nbsp;' +
-                '<a href="#" data-action="delete-section" style="color:#a00;">' + FL.i18n.delete_ + '</a>' +
+            '<a href="#" data-action="edit-section">' + FL.i18n.edit + '</a>' +
+            '&nbsp;|&nbsp;' +
+            '<a href="#" data-action="delete-section" style="color:#a00;">' + FL.i18n.delete_ + '</a>' +
             '</td></tr>';
     }
 
@@ -401,12 +401,12 @@
         fd.append('nonce', FL.nonce);
         fd.append('icon_id', id);
 
-        flAjax(fd, function(resp) {
+        flAjax(fd, function (resp) {
             if (!resp.success) return;
             var row = document.querySelector('#fl-custom-icons-table tr[data-id="' + id + '"]');
             if (row) {
                 row.classList.add('fl-fade-out');
-                setTimeout(function() {
+                setTimeout(function () {
                     row.remove();
                     var tbody = document.querySelector('#fl-custom-icons-table tbody');
                     if (tbody && tbody.children.length === 0) {
@@ -426,7 +426,7 @@
     // ─── PROFILE: Submit ────────────────────────────────────────
     function flSubmitProfile(form) {
         var fd = new FormData(form);
-        flAjax(fd, function(resp) {
+        flAjax(fd, function (resp) {
             if (!resp.success) return;
             var data = resp.data;
             if (data.avatar) {
@@ -449,7 +449,7 @@
         fd.append('fl_action', 'delete_avatar');
         fd.append('nonce', FL.nonce);
 
-        flAjax(fd, function(resp) {
+        flAjax(fd, function (resp) {
             if (!resp.success) return;
             document.getElementById('fl-avatar-current').style.display = 'none';
             document.getElementById('fl-avatar-current-img').src = '';
@@ -474,7 +474,7 @@
         fd.append('fl_action', 'restore_avatar');
         fd.append('nonce', FL.nonce);
 
-        flAjax(fd, function(resp) {
+        flAjax(fd, function (resp) {
             if (!resp.success) return;
             document.getElementById('fl-avatar-current-img').src = resp.data.avatar;
             document.getElementById('fl-avatar-current').style.display = '';
@@ -489,7 +489,7 @@
     // ─── ICONS: Add custom ──────────────────────────────────────
     function flSubmitAddIcon(form) {
         var fd = new FormData(form);
-        flAjax(fd, function(resp) {
+        flAjax(fd, function (resp) {
             if (!resp.success) return;
             var icon = resp.data;
 
@@ -517,7 +517,7 @@
             );
 
             var selects = document.querySelectorAll('select[name="icon"]');
-            selects.forEach(function(sel) {
+            selects.forEach(function (sel) {
                 var opt = document.createElement('option');
                 opt.value = icon.name;
                 opt.textContent = icon.name + ' \u2726';
@@ -530,7 +530,7 @@
     }
 
     // ─── Event delegation (handles static + dynamic elements) ───
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         var target = e.target.closest('[data-action]');
         if (!target) return;
 
@@ -587,11 +587,18 @@
             case 'restore-avatar':
                 flRestoreAvatar();
                 break;
+
+            case 'regenerate-robots-txt':
+                var fd = new FormData();
+                fd.append('fl_action', 'regenerate_robots_txt');
+                fd.append('nonce', target.dataset.nonce);
+                flAjax(fd, null);
+                break;
         }
     });
 
     // ─── Form submissions via event delegation ──────────────────
-    document.addEventListener('submit', function(e) {
+    document.addEventListener('submit', function (e) {
         var form = e.target;
         var formAction = form.dataset.flSubmit;
         if (!formAction) return;
@@ -629,7 +636,7 @@
     });
 
     // ─── Icon type radio change ─────────────────────────────────
-    document.addEventListener('change', function(e) {
+    document.addEventListener('change', function (e) {
         if (e.target.name === 'icon_type') {
             flToggleIconType();
         }

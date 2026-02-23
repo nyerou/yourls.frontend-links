@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Frontend Links 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-12\n"
+"POT-Creation-Date: 2026-02-23\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -23,6 +23,7 @@ msgstr ""
 "X-Poedit-SearchPath-2: includes/admin-page.php\n"
 "X-Poedit-SearchPath-3: includes/render.php\n"
 "X-Poedit-SearchPath-4: includes/functions.php\n"
+"X-Poedit-SearchPath-5: migrate.php\n"
 
 #. ─── Admin page: Installation ───────────────────────────────
 #: includes/admin-page.php
@@ -569,4 +570,114 @@ msgstr ""
 
 #: includes/functions.php
 msgid "index.php file deleted."
+msgstr ""
+
+#: includes/functions.php
+msgid "Unable to write the .htaccess file. Short URLs at the root may not work."
+msgstr ""
+
+#: includes/functions.php
+msgid "Auto mode index.php not found. Enable auto mode first."
+msgstr ""
+
+#: includes/functions.php
+msgid "A robots.txt already exists and was not created by this plugin. Delete it manually to enable auto-generation."
+msgstr ""
+
+#: includes/functions.php
+msgid "Unable to write the robots.txt file. Check folder permissions."
+msgstr ""
+
+#: includes/functions.php
+msgid "robots.txt generated: %s"
+msgstr ""
+
+#. ─── AJAX responses (theme, redirects, robots.txt, toggles) ─
+#: ajax.php
+msgid "Theme changed to \"%s\"."
+msgstr ""
+
+#: ajax.php
+msgid "Invalid theme."
+msgstr ""
+
+#: ajax.php
+msgid "Redirect options saved and .htaccess updated."
+msgstr ""
+
+#: ajax.php
+msgid "Options saved."
+msgstr ""
+
+#: ajax.php
+msgid "Option saved and robots.txt regenerated."
+msgstr ""
+
+#: ajax.php
+msgid "Options updated."
+msgstr ""
+
+#. ─── Migration page (migrate.php) ──────────────────────────
+#: migrate.php
+msgid "Migration required"
+msgstr ""
+
+#: migrate.php
+msgid "Settings structure update"
+msgstr ""
+
+#: migrate.php
+msgid "%d option(s) found in yourls_options — action required to continue."
+msgstr ""
+
+#: migrate.php
+msgid "Action required before continuing"
+msgstr ""
+
+#: migrate.php
+msgid "The plugin settings (<code>fl_*</code>) are currently stored in <code>yourls_options</code>, the global YOURLS table shared with the core and other plugins. The current version requires them to be in <code>frontend_settings</code>, the plugin's own private table."
+msgstr ""
+
+#: migrate.php
+msgid "Why this migration?"
+msgstr ""
+
+#: migrate.php
+msgid "Previous versions stored the plugin's configuration in <code>yourls_options</code> — YOURLS's global table — alongside core options and other plugins. This worked, but polluted a shared space and required multiple separate queries per page load."
+msgstr ""
+
+#: migrate.php
+msgid "The current version uses <code>frontend_settings</code> exclusively, a dedicated table created by the plugin. This avoids naming conflicts, improves performance (single cached load per request), and keeps the global table clean."
+msgstr ""
+
+#: migrate.php
+msgid "<strong>No data will be lost.</strong> Your current settings will be copied as-is to <code>frontend_settings</code>, then removed from <code>yourls_options</code>."
+msgstr ""
+
+#: migrate.php
+msgid "Options to move (%d)"
+msgstr ""
+
+#: migrate.php
+msgid "Yes, move the settings"
+msgstr ""
+
+#: migrate.php
+msgid "No, deactivate the plugin"
+msgstr ""
+
+#: migrate.php
+msgid "The plugin will be deactivated and you will need to reactivate it later to use it. Continue?"
+msgstr ""
+
+#: migrate.php
+msgid "The plugin will be deactivated if you decline."
+msgstr ""
+
+#: migrate.php
+msgid "Session expired. Please reload the page and try again."
+msgstr ""
+
+#: migrate.php
+msgid "Error"
 msgstr ""

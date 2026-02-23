@@ -22,7 +22,7 @@ function fl_get_active_theme(): string {
     static $cached = null;
     if ($cached !== null) return $cached;
 
-    $theme = yourls_get_option('fl_active_theme', 'default');
+    $theme = fl_get_setting('active_theme', 'default');
 
     // yourls_get_option may return false/null if the option doesn't exist
     if (!empty($theme) && is_string($theme) && is_dir(FL_THEMES_DIR . '/' . $theme)) {

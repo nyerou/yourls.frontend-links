@@ -68,24 +68,20 @@ function fl_install_tables() {
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    // Insert default data if tables are empty
+    // Insert profile/content defaults on first install
     fl_insert_defaults();
 
-    // Initialize options
-    if (yourls_get_option('fl_display_mode') === false) {
-        yourls_add_option('fl_display_mode', 'manual');
-    }
-    if (yourls_get_option('fl_shorturl_include_path') === false) {
-        yourls_add_option('fl_shorturl_include_path', '0');
-    }
+    // Insert plugin config defaults (INSERT IGNORE — never overwrites existing values)
+    fl_insert_config_defaults();
 }
 
 function fl_insert_defaults() {
     $db = yourls_get_db('write-fl_insert_defaults');
     $prefix = FL_TABLE_PREFIX;
 
-    // Check if settings already exist
-    $stmt = $db->query("SELECT COUNT(*) FROM `{$prefix}settings`");
+    // Check if the profile settings already exist (profile_name is always set on install)
+    $stmt = $db->prepare("SELECT COUNT(*) FROM `{$prefix}settings` WHERE setting_key = 'profile_name'");
+    $stmt->execute();
     if ($stmt->fetchColumn() > 0) return;
 
     // Default settings
@@ -113,4 +109,35 @@ function fl_insert_defaults() {
         (3, 'Blog', 'https://blog.example.com/', 'book', 1),
         (3, 'Podcast', 'https://podcast.example.com/', 'mic', 2),
         (3, 'YouTube Channel', 'https://youtube.com/', 'tv', 3)");
+}
+
+/**
+ * Insert default values for all plugin config keys.
+ * Uses INSERT IGNORE so existing values are never overwritten (safe for re-activation).
+ */
+function fl_insert_config_defaults(): void
+{
+    $db = yourls_get_db('write-fl_insert_config_defaults');
+    $table = FL_TABLE_PREFIX . 'settings';
+
+    $defaults = [
+        'display_mode'           => 'manual',
+        'shorturl_include_path'  => '0',
+        'disable_redirect_page'  => '0',
+        'disable_404_page'       => '0',
+        'active_theme'           => 'default',
+        'robots_shorturl_index'  => 'disallow',
+        'redirect_https'         => '0',
+        'redirect_www'           => '0',
+        'htaccess_version'       => '0',
+        'homepage_file_path'     => '',
+        'htaccess_file_path'     => '',
+        'robots_txt_path'        => '',
+        'yourls_root_index_path' => '',
+    ];
+
+    foreach ($defaults as $key => $value) {
+        $db->prepare("INSERT IGNORE INTO `$table` (setting_key, setting_value) VALUES (?, ?)")
+           ->execute([$key, $value]);
+    }
 }
