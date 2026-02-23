@@ -119,17 +119,19 @@ function fl_strip_base_path(string $url): string
 }
 
 /**
- * Check if the plugin tables exist in the database
+ * Check if the plugin tables exist in the database.
+ * Checks the return value of query() explicitly to handle PDO ERRMODE_SILENT
+ * (common on shared hosts) where errors return false instead of throwing.
  */
 function fl_tables_exist(): bool
 {
     try {
-        $db = yourls_get_db('read-fl_tables_exist');
+        $db    = yourls_get_db('read-fl_tables_exist');
         $table = fl_table('settings');
-        $db->query("SELECT 1 FROM `$table` LIMIT 1");
-        return true;
+        $stmt  = $db->query("SELECT 1 FROM `$table` LIMIT 1");
+        return $stmt !== false;
     }
-    catch (Exception $e) {
+    catch (\Throwable $e) {
         return false;
     }
 }
@@ -333,12 +335,12 @@ function fl_get_custom_icons(): array
     if ($cache !== null)
         return $cache;
     try {
-        $db = yourls_get_db('read-fl_get_custom_icons');
+        $db    = yourls_get_db('read-fl_get_custom_icons');
         $table = fl_table('icons');
-        $stmt = $db->query("SELECT * FROM `$table` ORDER BY name ASC");
-        $cache = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt  = $db->query("SELECT * FROM `$table` ORDER BY name ASC");
+        $cache = ($stmt !== false) ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
-    catch (Exception $e) {
+    catch (\Throwable $e) {
         $cache = [];
     }
     return $cache;
@@ -373,6 +375,7 @@ function fl_create_custom_icon(array $data): int|false
     $db = yourls_get_db('write-fl_create_custom_icon');
     $table = fl_table('icons');
     $stmt = $db->prepare("INSERT INTO `$table` (name, type, content) VALUES (?, ?, ?)");
+    if ($stmt === false) return false;
     $success = $stmt->execute([
         $data['name'],
         $data['type'],
@@ -388,18 +391,21 @@ function fl_delete_custom_icon(int $id): bool
 
     // Retrieve icon to delete image file if needed
     $stmt = $db->prepare("SELECT * FROM `$table` WHERE id = ?");
-    $stmt->execute([$id]);
-    $icon = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($stmt !== false) {
+        $stmt->execute([$id]);
+        $icon = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($icon && $icon['type'] === 'image') {
-        $filePath = FL_ICONS_DIR . '/' . $icon['content'];
-        if (file_exists($filePath)) {
-            unlink($filePath);
+        if ($icon && $icon['type'] === 'image') {
+            // basename() prevents path traversal if content is ever tampered
+            $filePath = FL_ICONS_DIR . '/' . basename($icon['content']);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
         }
     }
 
     $stmt = $db->prepare("DELETE FROM `$table` WHERE id = ?");
-    return $stmt->execute([$id]);
+    return $stmt !== false && $stmt->execute([$id]);
 }
 
 /**
@@ -663,10 +669,13 @@ function fl_serve_redirect_page(string $keyword, string $url): void
     // Get title from YOURLS DB
     $db = yourls_get_db('read-fl_serve_redirect_page');
     $table = YOURLS_DB_TABLE_URL;
-    $stmt = $db->prepare("SELECT title FROM `$table` WHERE keyword = ? LIMIT 1");
-    $stmt->execute([$keyword]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $linkTitle = !empty($row['title']) ? $row['title'] : $keyword;
+    $stmt      = $db->prepare("SELECT title FROM `$table` WHERE keyword = ? LIMIT 1");
+    $linkTitle = $keyword;
+    if ($stmt !== false) {
+        $stmt->execute([$keyword]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $linkTitle = !empty($row['title']) ? $row['title'] : $keyword;
+    }
 
     // Fetch OG metadata from the target page
     $targetMeta = fl_fetch_target_meta($url);
@@ -784,7 +793,7 @@ function fl_create_homepage_file(): array
     // Check if an index.php already exists and is not ours
     if (file_exists($filePath)) {
         $existing = file_get_contents($filePath);
-        if (strpos($existing, $marker) === false) {
+        if ($existing === false || strpos($existing, $marker) === false) {
             return [
                 'success' => false,
                 'message' => yourls__('An index.php file already exists at the root and was not created by this plugin. Delete it manually or use manual mode.', 'frontend-links')
@@ -935,6 +944,12 @@ function fl_create_root_htaccess(string $docRoot, string $yourlsBasePath): array
     // If .htaccess exists, replace our block or append
     if (file_exists($htaccessPath)) {
         $existing = file_get_contents($htaccessPath);
+        if ($existing === false) {
+            return [
+                'success' => false,
+                'message' => yourls__('Unable to read the existing .htaccess file. Check folder permissions.', 'frontend-links')
+            ];
+        }
 
         if (strpos($existing, $marker) !== false) {
             // Replace existing block
@@ -976,7 +991,7 @@ function fl_create_yourls_root_index(): void
     // Don't overwrite existing files not created by us
     if (file_exists($filePath)) {
         $existing = file_get_contents($filePath);
-        if (strpos($existing, $marker) === false) {
+        if ($existing === false || strpos($existing, $marker) === false) {
             return;
         }
     }
@@ -1002,9 +1017,9 @@ function fl_delete_homepage_file(): array
 
     if (!empty($filePath) && file_exists($filePath)) {
         $content = file_get_contents($filePath);
-        $marker = '/* FRONTEND_LINKS_AUTO_GENERATED */';
+        $marker  = '/* FRONTEND_LINKS_AUTO_GENERATED */';
 
-        if (strpos($content, $marker) === false) {
+        if ($content === false || strpos($content, $marker) === false) {
             return [
                 'success' => false,
                 'message' => yourls__('The index.php file has been manually modified. Deletion cancelled for safety.', 'frontend-links')
@@ -1025,7 +1040,7 @@ function fl_delete_homepage_file(): array
     $yourlsIndexPath = fl_get_setting('yourls_root_index_path', '');
     if (!empty($yourlsIndexPath) && file_exists($yourlsIndexPath)) {
         $existing = file_get_contents($yourlsIndexPath);
-        if (strpos($existing, '/* FRONTEND_LINKS_YOURLS_REDIRECT */') !== false) {
+        if ($existing !== false && strpos($existing, '/* FRONTEND_LINKS_YOURLS_REDIRECT */') !== false) {
             unlink($yourlsIndexPath);
         }
     }
@@ -1050,11 +1065,11 @@ function fl_delete_root_htaccess(): void
     if (empty($htaccessPath) || !file_exists($htaccessPath))
         return;
 
-    $content = file_get_contents($htaccessPath);
-    $marker = '# BEGIN Frontend Links';
+    $content   = file_get_contents($htaccessPath);
+    $marker    = '# BEGIN Frontend Links';
     $markerEnd = '# END Frontend Links';
 
-    if (strpos($content, $marker) === false)
+    if ($content === false || strpos($content, $marker) === false)
         return;
 
     // Remove our block
@@ -1111,10 +1126,10 @@ function fl_build_robots_txt_content(): string
 
     // Fetch all YOURLS short URLs
     try {
-        $db = yourls_get_db('read-fl_build_robots_txt');
+        $db    = yourls_get_db('read-fl_build_robots_txt');
         $table = YOURLS_DB_TABLE_URL;
-        $stmt = $db->query("SELECT keyword, url FROM `$table` ORDER BY keyword ASC");
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt  = $db->query("SELECT keyword, url FROM `$table` ORDER BY keyword ASC");
+        $rows  = ($stmt !== false) ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 
         if (!empty($rows)) {
             $rule = fl_get_setting('robots_shorturl_index', 'disallow') === 'allow' ? 'Allow' : 'Disallow';
@@ -1126,8 +1141,8 @@ function fl_build_robots_txt_content(): string
             }
         }
     }
-    catch (Exception $e) {
-    // DB unavailable, skip short URLs section
+    catch (\Throwable $e) {
+        // DB unavailable, skip short URLs section
     }
 
     $lines[] = '';
@@ -1151,7 +1166,7 @@ function fl_write_robots_txt(): array
     // Don't overwrite a robots.txt not created by us
     if (file_exists($filePath)) {
         $existing = file_get_contents($filePath);
-        if (strpos($existing, $marker) === false) {
+        if ($existing === false || strpos($existing, $marker) === false) {
             return [
                 'success' => false,
                 'message' => yourls__('A robots.txt already exists and was not created by this plugin. Delete it manually to enable auto-generation.', 'frontend-links'),
@@ -1186,8 +1201,8 @@ function fl_delete_robots_txt(): void
     }
 
     $content = file_get_contents($filePath);
-    if (strpos($content, '# FRONTEND_LINKS_ROBOTS_TXT') === false) {
-        return; // Not ours — leave it untouched
+    if ($content === false || strpos($content, '# FRONTEND_LINKS_ROBOTS_TXT') === false) {
+        return; // Not ours (or unreadable) — leave it untouched
     }
 
     @unlink($filePath);
@@ -1207,15 +1222,18 @@ function fl_get_settings(): array
     if ($fl_settings_cache !== null)
         return $fl_settings_cache;
     try {
-        $db = yourls_get_db('read-fl_get_settings');
+        $db    = yourls_get_db('read-fl_get_settings');
         $table = fl_table('settings');
-        $stmt = $db->query("SELECT setting_key, setting_value FROM `$table`");
+        $stmt  = $db->query("SELECT setting_key, setting_value FROM `$table`");
         $fl_settings_cache = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $fl_settings_cache[$row['setting_key']] = $row['setting_value'];
+        // $stmt can be false on ERRMODE_SILENT when the table doesn't exist yet
+        if ($stmt !== false) {
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $fl_settings_cache[$row['setting_key']] = $row['setting_value'];
+            }
         }
     }
-    catch (Exception $e) {
+    catch (\Throwable $e) {
         $fl_settings_cache = [];
     }
     return $fl_settings_cache;
@@ -1241,6 +1259,7 @@ function fl_update_setting(string $key, string $value): bool
     $table = fl_table('settings');
     $stmt = $db->prepare("INSERT INTO `$table` (setting_key, setting_value) VALUES (?, ?)
                            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+    if ($stmt === false) return false;
     $result = $stmt->execute([$key, $value]);
     if ($result && $fl_settings_cache !== null) {
         $fl_settings_cache[$key] = $value;
@@ -1271,13 +1290,18 @@ function fl_maybe_migrate_options(): void
     if (yourls_get_option('fl_display_mode') === false)
         return;
 
-    // Safety: only migrate if the destination table exists
-    if (!fl_tables_exist())
-        return;
+    // Create the tables if they were never created (upgrade without reactivation)
+    if (!fl_tables_exist()) {
+        require_once FL_PLUGIN_DIR . '/includes/install.php';
+        fl_install_tables();
+        // If still missing after creation attempt, bail safely
+        if (!fl_tables_exist())
+            return;
+    }
 
-    $db = yourls_get_db('write-fl_maybe_migrate_options');
+    $db    = yourls_get_db('write-fl_maybe_migrate_options');
     $table = fl_table('settings');
-    $keys = [
+    $keys  = [
         'display_mode', 'homepage_file_path', 'disable_redirect_page',
         'htaccess_version', 'robots_txt_path', 'active_theme',
         'shorturl_include_path', 'redirect_https', 'redirect_www',
@@ -1287,8 +1311,10 @@ function fl_maybe_migrate_options(): void
     foreach ($keys as $key) {
         $value = yourls_get_option('fl_' . $key);
         if ($value !== false) {
-            $db->prepare("INSERT IGNORE INTO `$table` (setting_key, setting_value) VALUES (?, ?)")
-               ->execute([$key, (string)$value]);
+            $stmt = $db->prepare("INSERT IGNORE INTO `$table` (setting_key, setting_value) VALUES (?, ?)");
+            if ($stmt !== false) {
+                $stmt->execute([$key, (string)$value]);
+            }
             yourls_delete_option('fl_' . $key);
         }
     }
@@ -1307,14 +1333,15 @@ function fl_get_sections(bool $activeOnly = true): array
     }
     $sql .= " ORDER BY sort_order ASC";
     $stmt = $db->query($sql);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return ($stmt !== false) ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 }
 
 function fl_get_section(int $id): ?array
 {
-    $db = yourls_get_db('read-fl_get_section');
+    $db    = yourls_get_db('read-fl_get_section');
     $table = fl_table('sections');
-    $stmt = $db->prepare("SELECT * FROM `$table` WHERE id = ?");
+    $stmt  = $db->prepare("SELECT * FROM `$table` WHERE id = ?");
+    if ($stmt === false) return null;
     $stmt->execute([$id]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result ?: null;
@@ -1322,10 +1349,11 @@ function fl_get_section(int $id): ?array
 
 function fl_create_section(array $data): int|false
 {
-    $db = yourls_get_db('write-fl_create_section');
+    $db    = yourls_get_db('write-fl_create_section');
     $table = fl_table('sections');
-    $stmt = $db->prepare("INSERT INTO `$table` (section_key, title, sort_order, is_active)
+    $stmt  = $db->prepare("INSERT INTO `$table` (section_key, title, sort_order, is_active)
                            VALUES (?, ?, ?, ?)");
+    if ($stmt === false) return false;
     $success = $stmt->execute([
         $data['section_key'],
         $data['title'],
@@ -1337,8 +1365,8 @@ function fl_create_section(array $data): int|false
 
 function fl_update_section(int $id, array $data): bool
 {
-    $db = yourls_get_db('write-fl_update_section');
-    $table = fl_table('sections');
+    $db     = yourls_get_db('write-fl_update_section');
+    $table  = fl_table('sections');
     $fields = [];
     $values = [];
 
@@ -1353,17 +1381,17 @@ function fl_update_section(int $id, array $data): bool
         return false;
 
     $values[] = $id;
-    $sql = "UPDATE `$table` SET " . implode(', ', $fields) . " WHERE id = ?";
+    $sql  = "UPDATE `$table` SET " . implode(', ', $fields) . " WHERE id = ?";
     $stmt = $db->prepare($sql);
-    return $stmt->execute($values);
+    return $stmt !== false && $stmt->execute($values);
 }
 
 function fl_delete_section(int $id): bool
 {
-    $db = yourls_get_db('write-fl_delete_section');
+    $db    = yourls_get_db('write-fl_delete_section');
     $table = fl_table('sections');
-    $stmt = $db->prepare("DELETE FROM `$table` WHERE id = ?");
-    return $stmt->execute([$id]);
+    $stmt  = $db->prepare("DELETE FROM `$table` WHERE id = ?");
+    return $stmt !== false && $stmt->execute([$id]);
 }
 
 // ─── Links ──────────────────────────────────────────────────
@@ -1381,14 +1409,15 @@ function fl_get_links(bool $activeOnly = true): array
     }
     $sql .= " ORDER BY s.sort_order ASC, l.sort_order ASC";
     $stmt = $db->query($sql);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return ($stmt !== false) ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 }
 
 function fl_get_link(int $id): ?array
 {
-    $db = yourls_get_db('read-fl_get_link');
+    $db    = yourls_get_db('read-fl_get_link');
     $table = fl_table('links');
-    $stmt = $db->prepare("SELECT * FROM `$table` WHERE id = ?");
+    $stmt  = $db->prepare("SELECT * FROM `$table` WHERE id = ?");
+    if ($stmt === false) return null;
     $stmt->execute([$id]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result ?: null;
@@ -1404,16 +1433,18 @@ function fl_get_links_by_section(int $sectionId, bool $activeOnly = true): array
     }
     $sql .= " ORDER BY sort_order ASC";
     $stmt = $db->prepare($sql);
+    if ($stmt === false) return [];
     $stmt->execute([$sectionId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function fl_create_link(array $data): int|false
 {
-    $db = yourls_get_db('write-fl_create_link');
+    $db    = yourls_get_db('write-fl_create_link');
     $table = fl_table('links');
-    $stmt = $db->prepare("INSERT INTO `$table` (section_id, label, url, icon, sort_order, is_active)
+    $stmt  = $db->prepare("INSERT INTO `$table` (section_id, label, url, icon, sort_order, is_active)
                            VALUES (?, ?, ?, ?, ?, ?)");
+    if ($stmt === false) return false;
     $success = $stmt->execute([
         $data['section_id'],
         $data['label'],
@@ -1427,8 +1458,8 @@ function fl_create_link(array $data): int|false
 
 function fl_update_link(int $id, array $data): bool
 {
-    $db = yourls_get_db('write-fl_update_link');
-    $table = fl_table('links');
+    $db     = yourls_get_db('write-fl_update_link');
+    $table  = fl_table('links');
     $fields = [];
     $values = [];
 
@@ -1443,15 +1474,15 @@ function fl_update_link(int $id, array $data): bool
         return false;
 
     $values[] = $id;
-    $sql = "UPDATE `$table` SET " . implode(', ', $fields) . " WHERE id = ?";
+    $sql  = "UPDATE `$table` SET " . implode(', ', $fields) . " WHERE id = ?";
     $stmt = $db->prepare($sql);
-    return $stmt->execute($values);
+    return $stmt !== false && $stmt->execute($values);
 }
 
 function fl_delete_link(int $id): bool
 {
-    $db = yourls_get_db('write-fl_delete_link');
+    $db    = yourls_get_db('write-fl_delete_link');
     $table = fl_table('links');
-    $stmt = $db->prepare("DELETE FROM `$table` WHERE id = ?");
-    return $stmt->execute([$id]);
+    $stmt  = $db->prepare("DELETE FROM `$table` WHERE id = ?");
+    return $stmt !== false && $stmt->execute([$id]);
 }

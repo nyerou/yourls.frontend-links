@@ -81,6 +81,7 @@ function fl_insert_defaults() {
 
     // Check if the profile settings already exist (profile_name is always set on install)
     $stmt = $db->prepare("SELECT COUNT(*) FROM `{$prefix}settings` WHERE setting_key = 'profile_name'");
+    if ($stmt === false) return;
     $stmt->execute();
     if ($stmt->fetchColumn() > 0) return;
 

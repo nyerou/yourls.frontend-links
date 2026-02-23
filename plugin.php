@@ -3,7 +3,7 @@
 Plugin Name: Frontend Links
 Plugin URI: https://github.com/nyerou/yourls.frontend-links
 Description: Customizable link page with section, link, and profile management from the YOURLS admin.
-Version: 1.6
+Version: 1.7
 Author: Nyerou
 Author URI: https://nyerou.link
 */
@@ -54,7 +54,7 @@ Author URI: https://nyerou.link
 if (!defined('YOURLS_ABSPATH')) die();
 
 // ─── Plugin constants ───────────────────────────────────────
-define('FL_VERSION',    '1.6');
+define('FL_VERSION',    '1.7');
 define('FL_PLUGIN_DIR', __DIR__);
 define('FL_PLUGIN_SLUG', basename(__DIR__));
 define('FL_TABLE_PREFIX', 'frontend_');

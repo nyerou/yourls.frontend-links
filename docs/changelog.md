@@ -2,6 +2,19 @@
 
 All notable changes to Frontend Links are documented here.
 
+## [1.7] - 2026-02-23
+
+### Fixed
+
+- **HTTP 500 on activation and migration** (cPanel / shared hosts): PDO configured in `ERRMODE_SILENT` (the default on many shared hosts) returns `false` from `query()` and `prepare()` instead of throwing an exception. Calling `->fetch()`, `->fetchAll()`, or `->execute()` on `false` caused a PHP fatal error — visible as an HTTP 500 with no other output. All 17 affected database call sites in `functions.php` now check the return value before chaining method calls. This was the root cause of the activation failure and the migration 500 reported on cPanel.
+- **Migration 500** (`migrate.php`): `fl_maybe_migrate_options()` now auto-creates the `frontend_settings` table when it is missing (upgrade without plugin reactivation) instead of bailing out silently. The `prepare()→execute()` chain is also guarded.
+- **`fl_get_settings()` fatal on fresh table-less load**: `$stmt->fetch()` called on `false` when `frontend_settings` did not yet exist; the `$stmt !== false` guard is now applied before the fetch loop, and `catch (Exception)` widened to `catch (\Throwable)` to also intercept PHP `Error` subclasses.
+- **`fl_get_custom_icons()` and `fl_build_robots_txt_content()`**: same `query()` null-check and `catch (\Throwable)` upgrade applied.
+- **`.htaccess` content loss**: `fl_create_root_htaccess()` could silently overwrite the entire `.htaccess` with only the plugin's rules when `file_get_contents()` failed on an existing file (unreadable due to permissions). The function now returns an error in that case.
+- **Wrong behavior on unreadable files**: `strpos()` called on a `false` return from `file_get_contents()` produced incorrect results (PHP 8 raises a `TypeError`). Guarded in `fl_create_homepage_file()`, `fl_create_yourls_root_index()`, `fl_delete_homepage_file()`, `fl_delete_root_htaccess()`, `fl_write_robots_txt()`, and `fl_delete_robots_txt()`.
+- **Path traversal in icon deletion** (`fl_delete_custom_icon()`): the icon filename stored in the database was concatenated directly into the file path. A tampered `content` value such as `../../config.php` could escape the uploads directory. The path is now sanitized with `basename()`.
+- **CSRF via GET on AJAX endpoint** (`ajax.php`): the nonce was read from `$_REQUEST`, which includes query-string parameters. A crafted link could trigger authenticated CRUD actions without a form submission. The nonce is now read exclusively from `$_POST`.
+
 ## [1.6] - 2026-02-23
 
 ### Added

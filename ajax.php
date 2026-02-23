@@ -40,7 +40,8 @@ if ($auth !== true) {
 }
 
 // Verify nonce manually (without yourls_verify_nonce which die() with HTML)
-$nonce = $_REQUEST['nonce'] ?? '';
+// Use $_POST only — never $_REQUEST — to prevent CSRF via crafted GET links
+$nonce = $_POST['nonce'] ?? '';
 $expected = yourls_create_nonce('frontend_links');
 if ($nonce !== $expected) {
     echo json_encode(['success' => false, 'message' => yourls__('Session expired. Please reload the page.', 'frontend-links')]);
