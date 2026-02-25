@@ -1,11 +1,11 @@
 <?php
 /*
 Plugin Name: Frontend Links
-Plugin URI: https://github.com/nyerou/yourls.frontend-links
+Plugin URI: https://github.com/neanrie/yourls.frontend-links
 Description: Customizable link page with section, link, and profile management from the YOURLS admin.
 Version: 1.7
-Author: Nyerou
-Author URI: https://nyerou.link
+Author: Neanrie
+Author URI: https://github.com/neanrie
 */
 
 /**
@@ -43,11 +43,11 @@ Author URI: https://nyerou.link
  *     js/stats-rewrite.js   ← Admin stats fix
  *   themes/
  *     default/              ← Minimal default theme
- *     nyerou-original/      ← Original dark theme with particles
+ *     neanrie-original/      ← Original dark theme with particles
  *
  * @package FrontendLinks
- * @author  Nyerou
- * @link    https://github.com/nyerou/yourls.frontend-links
+ * @author  Neanrie
+ * @link    https://github.com/neanrie/yourls.frontend-links
  */
 
 // No direct access

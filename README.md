@@ -195,4 +195,4 @@ MIT
 
 ## Author
 
-[Nyerou](https://nyerou.link)
+[Neanrie](https://github.com/neanrie)
